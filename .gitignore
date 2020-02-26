@@ -1,0 +1,4 @@
+# ignored files & folder
+
+.idea
+cmake-build-debug
