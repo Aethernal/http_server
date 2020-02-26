@@ -1,1 +1,0 @@
-/usr/bin/cc -g   CMakeFiles/http_server.dir/main.c.o  -o http_server 
