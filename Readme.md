@@ -13,7 +13,10 @@
 ***
 
 ### Presentation
+Cherokee is an HTTP server implementation project supporting version 1.1.
+It is an ETNA project.
 
+cf [rfc2616](https://tools.ietf.org/html/rfc2616)
 ***
 
 ### Architecture
@@ -75,6 +78,6 @@
 
 ***
 
-### Module Index directory
+### Module index directory
 Enable the user to navigate through specific server directory
 ***
