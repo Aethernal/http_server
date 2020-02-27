@@ -21,6 +21,11 @@
 */
 
 /*
+ * allow program to read from STDIN on select
+ */
+#define STDIN 0
+
+/*
  * maximum number of concurrent client
  */
 enum {
@@ -39,5 +44,21 @@ void bind_server_socket(const char *port);
  * dispatch to another threads
  */
 void http_serve(const char *port);
+
+/*
+ * handle new requests
+ */
+void computeServerEvent();
+
+/*
+ * handle client response
+ *
+ */
+void computeClientEvent(int client);
+
+/*
+ * handle admin input in terminal
+ */
+void computeSTDInput();
 
 #endif //HTTP_SERVER_MAIN_H

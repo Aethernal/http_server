@@ -1,0 +1,18 @@
+//
+// Created by florian.aubin on 27/02/2020.
+//
+
+#include "utils.h"
+#include "logger.h"
+
+char* readline() {
+    char* buffer = malloc(1024);
+    if(buffer == NULL){
+        logger_error("utils - readline", "failed to malloc");
+        return NULL;
+    }
+    fgets(buffer, 256, stdin);
+    int length = strlen(buffer);
+    buffer[length - 1] = '\0';
+    return buffer;
+}
