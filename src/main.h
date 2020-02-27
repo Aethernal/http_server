@@ -23,22 +23,10 @@
 /*
  * maximum number of concurrent client
  */
-static const int max_client = 100;
-
-/*
- * maximum number of concurrent client
- */
-static const int max_pending_connection = 10000;
-
-/*
- * server and clients files descriptors
- */
-static int serverfd, clients[max_client];
-
-/*
- * define if the accept loop shall continue or stop
- */
-static int running = 0;
+enum {
+    max_client = 100,
+    max_pending_connection = 10000
+};
 
 /*
  * search available ipv4 addr and bind to port
@@ -50,6 +38,6 @@ void bind_server_socket(const char *port);
  * main request handler loop
  * dispatch to another threads
  */
-void http_serve(const char *port)
+void http_serve(const char *port);
 
 #endif //HTTP_SERVER_MAIN_H

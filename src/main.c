@@ -1,6 +1,16 @@
 #include "main.h"
 
 /*
+ * server and clients files descriptors
+ */
+static int serverfd, clients[max_client];
+
+/*
+ * define if the accept loop shall continue or stop
+ */
+static int running = 0;
+
+/*
  * parse parameters
  * default port 80
  */
