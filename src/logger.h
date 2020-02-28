@@ -9,7 +9,8 @@
 #include <libio.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <stdarg.h>
+#include <time.h>
 
 #define logger_color_red "\e[0;31m"
 #define logger_color_bold_red "\e[1;31m"
@@ -38,22 +39,32 @@ void logger_exit();
 /*
  * log a message with green tag
  */
-void logger_success(const char* tag, const char* message);
+void logger_success(const char* tag, const char* format, ...);
 
 /*
  * log a message with red tag
  */
-void logger_error(const char* tag, const char* message);
+void logger_error(const char* tag, const char* format, ...);
 
 /*
  * log a message with yellow tag
  */
-void logger_warning(const char* tag, const char* message);
+void logger_warning(const char* tag, const char* format, ...);
+
+/*
+ * log e message with cyan tag
+ */
+void logger_info(const char* tag, const char* format, ...);
+
+/*
+ * log e message with magenta tag
+ */
+void logger_content(const char* tag, const char* format, ...);
 
 /*
  * log a message with the defined tag color (generic)
  * if log file wasn't opened correctly, log to stdio
  */
-void logger_log(const char* tag, const char* message, const char* color);
+void logger_log(const char* tag, const char* format, const char* color, va_list args);
 
 #endif //HTTP_SERVER_LOGGER_H
