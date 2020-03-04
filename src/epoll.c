@@ -7,7 +7,6 @@
 #include "logger.h"
 #include "utils.h"
 
-typedef const char string[86];
 /*
  * structure to access dispatched event
  */
@@ -109,11 +108,11 @@ void epoll_client_event(int eventIndex) {
 
 
     // TODO REMOVE
-    string headers = "HTTP/1.1 %d OK\n" \
-                "date:%s\n" \
-                "Accept-Ranges: \n" \
-                "Content-type: text/html\n" \
-                "Content-Length: %d" \
+    const char headers [] = "HTTP/1.1 %d OK\n" \
+				"date:%s\n" \
+				"Accept-Ranges: \n" \
+				"Content-type: text/html\n" \
+				"Content-Length: %d" \
                 "\n\n%s";
 
     const char content [] = "<HTML>\n" \
