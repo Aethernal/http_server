@@ -42,10 +42,6 @@ void main_bind_server_socket(const char *interface, const char *port);
  */
 void main_http_serve(const char *interface, const char *port);
 
-struct headers {
-    char* http_version;
-    char* accept_ranges;
-    int content_length;
-};
+
 
 #endif //HTTP_SERVER_MAIN_H

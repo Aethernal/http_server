@@ -15,4 +15,9 @@
  */
 char* readline();
 
+/*
+ * return current date formated for http response, buffer may need to be freed
+ */
+void current_date(char** buffer);
+
 #endif //HTTP_SERVER_UTILS_H

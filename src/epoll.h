@@ -11,12 +11,17 @@
 
 #define STDIN 0
 
+/*
+ * numbero of event in the epoll
+ */
 enum {
     max_event = 10
 };
 
 /*
- * add non blocking flag to a file descriptor
+ * add non blocking flag to a file descriptor [why does the socket become unix ?] FuMyLi
+ * this cause a failure to accept() if sockaddr is not sockaddr_un
+ * sockaddr_in -> sockaddr_un
  */
 int epoll_setnonblocking(int fd);
 

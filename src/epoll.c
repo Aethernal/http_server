@@ -103,7 +103,7 @@ void epoll_client_event(int eventIndex) {
 
     char* buffer [1024] = {[0 ... 1023] '\0'};
     int client = events[eventIndex].data.fd;
-    int evs = events[eventIndex].events;
+    int event = events[eventIndex].events;
 
 
 
@@ -123,12 +123,13 @@ void epoll_client_event(int eventIndex) {
                                     "\t\t<H1>Welcome</H1>\n" \
                                 "\t</BODY>\n" \
                             "</HTML>\n";
-    time_t current_time;
+    // TODO REMOVE END
+
     char date [32] = {[0 ... 31] '\0'};
-    char response [1024] = {[0 ... 1023] '\0'};
+    char response [65565] = {[0 ... 65564] '\0'};
     char *http = NULL;
 
-    if ( (evs & EPOLLIN) != 0) {
+    if ((event & EPOLLIN) != 0) {
 
         memset(buffer, sizeof(buffer)-1, '\0');
         read(client, buffer, sizeof(buffer)-1);
@@ -137,8 +138,7 @@ void epoll_client_event(int eventIndex) {
         // http request ?
         if (strstr(buffer, "HTTP/") != NULL) {
 
-            time(&current_time);
-            strftime(date, sizeof(date) - 1, "%a, %d %b %Y %T", gmtime(&current_time));
+            current_date(&date);
 
             snprintf(response, sizeof(response) - 1, headers, 200, date,
                      strlen(content), content);
@@ -146,7 +146,7 @@ void epoll_client_event(int eventIndex) {
             logger_content("epoll - client_event", "\n%s", response);
 
             write(client, response, strlen(response));
-
+            close(client);
         }
 
     }
@@ -155,7 +155,7 @@ void epoll_client_event(int eventIndex) {
      * client disconnected, remove from epoll
      * cf close -> fd - fclose -> File from fopen()
      */
-    if ( (evs & (EPOLLERR | EPOLLRDHUP | EPOLLHUP)) != 0) {
+    else if ((event & (EPOLLERR | EPOLLRDHUP | EPOLLHUP)) != 0) {
         epoll_ctl(epollfd, EPOLL_CTL_DEL, client, NULL);
         close(client);
     } else {
