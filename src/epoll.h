@@ -7,6 +7,7 @@
 
 #include <zconf.h>
 #include <ctype.h>
+#include <sys/un.h>
 
 #define STDIN 0
 
@@ -22,7 +23,7 @@ int epoll_setnonblocking(int fd);
 /*
  * epoll based server
  */
-void epoll_serve(const char* port);
+void epoll_serve(const char *interface, const char* port);
 
 /*
  * handle epoll client event (input/disconnect)
@@ -32,7 +33,7 @@ void epoll_client_event(int eventIndex);
 /*
  * handle epoll new requests
  */
-void epoll_server_event(int eventIndex);
+void epoll_server_event();
 
 /*
  * handle stdin commands

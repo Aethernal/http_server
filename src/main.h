@@ -34,12 +34,18 @@ extern int serverfd, running;
  * search available ipv4 addr and bind to port
  * then listen for incoming connection
  */
-void main_bind_server_socket(const char *port);
+void main_bind_server_socket(const char *interface, const char *port);
 
 /*
  * main request handler loop
  * dispatch to another threads
  */
-void main_http_serve(const char *port);
+void main_http_serve(const char *interface, const char *port);
+
+struct headers {
+    char* http_version;
+    char* accept_ranges;
+    int content_length;
+};
 
 #endif //HTTP_SERVER_MAIN_H

@@ -25,6 +25,7 @@ int main(int argc, char **argv) {
     char* port = "25565";
     char* logger_file = "out.log";
     char* default_directory = ".";
+    char* interface = "0.0.0.0";
 
     // parameters iterator
     int opt;
@@ -54,7 +55,7 @@ int main(int argc, char **argv) {
     }
 
     // start http server
-    main_http_serve(port);
+    main_http_serve(interface, port);
 
     if (serverfd != -1)
         close(serverfd);
@@ -64,15 +65,15 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void main_http_serve(const char *port) {
+void main_http_serve(const char *interface, const char *port) {
 
-    epoll_serve(port);
+    epoll_serve(interface, port);
 
 }
 
-void main_bind_server_socket(const char *port) {
+void main_bind_server_socket(const char *interface, const char *port) {
 
-    struct addrinfo socket_options, *addrs, *addr;
+    struct addrinfo socket_options = {}, *addrs, *addr;
 
     logger_info("main - bind_server_socket", "starting server");
 
@@ -81,7 +82,6 @@ void main_bind_server_socket(const char *port) {
      * http://man7.org/linux/man-pages/man3/getaddrinfo.3.html
      * ai_flags = AI_PASSIVE  allow to bind the socket to accept requests
      */
-    memset(&socket_options, 0, sizeof(socket_options));
     socket_options.ai_family = AF_INET;
     socket_options.ai_socktype = SOCK_STREAM;
     socket_options.ai_flags = AI_PASSIVE;
@@ -101,11 +101,15 @@ void main_bind_server_socket(const char *port) {
      * bind sockets to port
      */
     for (addr = addrs; addr != NULL; addr = addrs->ai_next) {
-        int option = 1;
+        int option = 1; // boolean value to enable SO_REUSEADDR
+
         serverfd = socket(addr->ai_family, addr->ai_socktype, 0); // default protocol
+
         setsockopt(serverfd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option)); // allow to reuse same port
-        if (serverfd == -1) continue; // failed to create socket
-        if (bind(serverfd, addr->ai_addr, addr->ai_addrlen) == 0) break; // success
+        if (serverfd == -1)
+            continue; // failed to create socket
+        if (bind(serverfd, addr->ai_addr, addr->ai_addrlen) == 0)
+            break; // success
     }
 
     // check if we could bind a socket

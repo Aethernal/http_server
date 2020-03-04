@@ -77,8 +77,11 @@ void logger_log(const char* tag, const char* format, const char* color, va_list 
     va_copy(args_dup, args);
 
     // update size for content format
-    needed = vsnprintf(NULL, 0 , buffer, args_dup);
-    buffer = realloc(buffer, needed);
+    int new_needed = vsnprintf(NULL, 0 , buffer, args_dup);
+
+    // realloc only if different size
+    if (needed != new_needed );
+        buffer = realloc(buffer, needed);
 
     if (logFile == NULL ) {
         vprintf( buffer, args);

@@ -7,31 +7,24 @@
 #include "logger.h"
 #include "utils.h"
 
+typedef const char string[86];
 /*
  * structure to access dispatched event
  */
 static struct epoll_event event, events[max_event];
 static int epollfd;
 
-int epoll_setnonblocking(int fd) {
-
-    int flags = 0;
-
-    // get current flags value
-    if ((flags = fcntl(fd, F_GETFL, 0)) == -1)
-        flags = 0;
-
-    // update with old flags + o_nonblock
-    return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-}
-
-void epoll_serve(const char *port) {
+void epoll_serve(const char *interface, const char *port) {
 
     int n, event_count = -1;
 
-    main_bind_server_socket(port);
+    main_bind_server_socket(interface, port);
 
-    epoll_setnonblocking(serverfd);
+    if (epoll_setnonblocking(serverfd) == -1) {
+        logger_error("epoll - serve", "failed to set server socket to non-blocking");
+        perror("nonblocking");
+        return;
+    }
 
     // create epoll and get fd for configuration
     epollfd = epoll_create1(0);
@@ -113,12 +106,14 @@ void epoll_client_event(int eventIndex) {
     int client = events[eventIndex].data.fd;
     int evs = events[eventIndex].events;
 
+
+
     // TODO REMOVE
-    const char headers [] = "HTTP/1.1 %d OK\n" \
-				"date:%s\n" \
-				"Accept-Ranges: \n" \
-				"Content-type: text/html\n" \
-				"Content-Length: %d" \
+    string headers = "HTTP/1.1 %d OK\n" \
+                "date:%s\n" \
+                "Accept-Ranges: \n" \
+                "Content-type: text/html\n" \
+                "Content-Length: %d" \
                 "\n\n%s";
 
     const char content [] = "<HTML>\n" \
@@ -170,20 +165,10 @@ void epoll_client_event(int eventIndex) {
 
 }
 
-int epoll_content_length(const char* content, unsigned int content_length) {
-    int nb = 0;
-    int n = 0;
+void epoll_server_event() {
 
-    for (n = 0; n < content_length; n++)
-        if (isprint(content[n])) // can char be printed ?
-            nb++;
-
-    return nb;
-}
-
-void epoll_server_event(int eventIndex) {
-
-    struct sockaddr_in client_addr;
+    // sockaddr_in does not work (Invalid argument), we need to use sockadddr_un
+    struct sockaddr_un client_addr;
     socklen_t client_addr_len;
 
     int client = accept(serverfd, &client_addr, &client_addr_len);
@@ -192,7 +177,10 @@ void epoll_server_event(int eventIndex) {
         return;
     }
 
-    epoll_setnonblocking(client);
+    if (epoll_setnonblocking(client) == -1) {
+        logger_error("epoll - serve", "failed to set client socket to non-blocking");
+        return;
+    }
 
     // EPOLLET for non blocking behavior
     event.events = EPOLLIN | EPOLLET;
@@ -203,6 +191,19 @@ void epoll_server_event(int eventIndex) {
         close(client);
         return;
     }
+
+}
+
+int epoll_setnonblocking(int fd) {
+
+    int flags = 0;
+
+    // get current flags value
+    if ((flags = fcntl(fd, F_GETFL, 0)) == -1)
+        flags = 0;
+
+    // update with old flags + o_nonblock
+    return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 
 }
 
