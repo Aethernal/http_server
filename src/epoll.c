@@ -6,6 +6,8 @@
 #include "epoll.h"
 #include "logger.h"
 #include "utils.h"
+#include "http.h"
+#include "services.h"
 
 /*
  * structure to access dispatched event
@@ -101,21 +103,21 @@ void epoll_serve(const char *interface, const char *port) {
 
 void epoll_client_event(int eventIndex) {
 
-    char* buffer [1024] = {[0 ... 1023] '\0'};
+    char *buffer[1024] = {[0 ... 1023] '\0'};
     int client = events[eventIndex].data.fd;
     int event = events[eventIndex].events;
 
 
 
     // TODO REMOVE
-    const char headers [] = "HTTP/1.1 %d OK\n" \
-				"date:%s\n" \
-				"Accept-Ranges: \n" \
-				"Content-type: text/html\n" \
-				"Content-Length: %d" \
+    const char headers[] = "HTTP/1.1 %d OK\n" \
+                "date:%s\n" \
+                "Accept-Ranges: \n" \
+                "Content-type: text/html\n" \
+                "Content-Length: %d" \
                 "\n\n%s";
 
-    const char content [] = "<HTML>\n" \
+    const char content[] = "<HTML>\n" \
                                 "\t<HEAD>\n" \
                                     "\t\t<TITLE>200 OK</TITLE>\n " \
                                 "\t</HEAD>\n" \
@@ -125,36 +127,60 @@ void epoll_client_event(int eventIndex) {
                             "</HTML>\n";
     // TODO REMOVE END
 
-    char date [32] = {[0 ... 31] '\0'};
-    char response [65565] = {[0 ... 65564] '\0'};
+    char date[32] = {[0 ... 31] '\0'};
+    char response[65565] = {[0 ... 65564] '\0'};
     char *http = NULL;
 
     if ((event & EPOLLIN) != 0) {
 
-        memset(buffer, sizeof(buffer)-1, '\0');
-        read(client, buffer, sizeof(buffer)-1);
-        logger_content("epoll - client_event", "\n%s", buffer);
+        Request *request = http_parse_request(client);
 
-        // http request ?
-        if (strstr(buffer, "HTTP/") != NULL) {
 
-            current_date(&date);
+        if (request != NULL) {
 
-            snprintf(response, sizeof(response) - 1, headers, 200, date,
-                     strlen(content), content);
+            if (strcmp(request->version, "HTTP/1.1") != 0) {
 
-            logger_content("epoll - client_event", "\n%s", response);
+                Response *resp = http_create_response(client);
+                resp->response_code = 505;
+                http_send_response(request, resp);
+                close(client);
 
-            write(client, response, strlen(response));
+                return;
+            }
+
+            const char *allowed_methods[5] = {HTTP_METHOD_GET, HTTP_METHOD_HEAD, HTTP_METHOD_POST, HTTP_METHOD_PUT, HTTP_METHOD_DELETE};
+            int allowed_method = 0;
+
+            for (int i = 0; i < 5; i++)
+                if (strcmp(request->method, allowed_methods[i]) == 0)
+                    allowed_method = 1;
+
+
+            if (!allowed_method) {
+
+                Response *resp = http_create_response(client);
+                resp->response_code = 405;
+                http_send_response(request, resp);
+                close(client);
+
+                return;
+            }
+
+            route(request);
+
+            return;
+
+        } else {
             close(client);
+            return;
         }
 
     }
 
-    /*
-     * client disconnected, remove from epoll
-     * cf close -> fd - fclose -> File from fopen()
-     */
+        /*
+         * client disconnected, remove from epoll
+         * cf close -> fd - fclose -> File from fopen()
+         */
     else if ((event & (EPOLLERR | EPOLLRDHUP | EPOLLHUP)) != 0) {
         epoll_ctl(epollfd, EPOLL_CTL_DEL, client, NULL);
         close(client);
@@ -167,11 +193,11 @@ void epoll_client_event(int eventIndex) {
 void epoll_server_event() {
 
     // sockaddr_in does not work (Invalid argument), we need to use sockadddr_un
-    struct sockaddr_un client_addr;
+    struct sockaddr_in client_addr;
     socklen_t client_addr_len;
 
     int client = accept(serverfd, &client_addr, &client_addr_len);
-    if(client == -1) {
+    if (client == -1) {
         logger_error("epoll - server_event", "failed to connect new client");
         return;
     }
@@ -194,7 +220,7 @@ void epoll_server_event() {
 }
 
 int epoll_setnonblocking(int fd) {
-
+/*
     int flags = 0;
 
     // get current flags value
@@ -203,7 +229,7 @@ int epoll_setnonblocking(int fd) {
 
     // update with old flags + o_nonblock
     return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-
+*/
 }
 
 void epoll_stdin_event() {

@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 
 /*
  * mime example
@@ -15,7 +16,13 @@
  * application/octet-stream
  * image/jpeg, image/png, and image/svg+xml.
  */
-const char* DEFAULT_MIME = "application/octet-stream";
+static const char* DEFAULT_MIME = "text/html";
+
+static const char* HTTP_METHOD_GET = "GET";
+static const char* HTTP_METHOD_HEAD = "HEAD";
+static const char* HTTP_METHOD_POST = "POST";
+static const char* HTTP_METHOD_PUT = "PUT";
+static const char* HTTP_METHOD_DELETE = "DELETE";
 
 typedef struct content {
     char* content;
@@ -34,14 +41,14 @@ typedef struct query {
 } Query;
 
 typedef struct response {
-    int clientfd;
     int response_code;
-    Header **headers;
+    Header *headers;
+    int header_count;
     Content content;
 } Response;
 
 /*
- * filter version 1.1 or throw 505
+ * filter version HTTP/1.1 or throw 505
  * filter method GET | HEAD | POST | PUT | DELETE or throw 405
  * uri max length 2048 or throw 414
  * headers name max size 1024 or throw 431
@@ -52,11 +59,14 @@ typedef struct response {
  */
 typedef struct request {
     int clientfd;
+    char* buffer;
     char* version;
     char* method;
     char* uri;
     Query *query;
+    int query_count;
     Header *headers;
+    int header_count;
     Content payload;
 } Request;
 
@@ -78,12 +88,33 @@ Request* http_parse_request(int clientfd);
  *
  *	{content}
  */
-void http_send_response(Response *response); // clear response structure after send
+void http_send_response(Request *request, Response *response); // clear response structure after send
 
 /*
  * get specific header from headers list
  * return NULL if not found
  */
-Header* http_header_get(const char* name, Header *headers);
+char* http_header_get(const char* name, Request *request);
+
+/*
+ * create empty Request structure for a specific fd
+ */
+Request* http_create_request(int clientfd);
+
+/*
+ * free request and free every content
+ */
+void http_free_request(Request *request);
+
+/*
+ * create empty Response for a specific fd
+ */
+Response* http_create_response();
+
+/*
+ * free response and free every content;
+ * don't free content type = const char*
+ */
+void http_free_response(Response *response);
 
 #endif //HTTP_SERVER_HTTP_H

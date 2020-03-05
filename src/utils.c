@@ -17,8 +17,8 @@ char* readline() {
     return buffer;
 }
 
-void current_date(char** buffer) {
+void current_date(char* buffer, int size) {
     time_t current_time;
     time(&current_time);
-    strftime(buffer, sizeof(*buffer) - 1, "%a, %d %b %Y %T", gmtime(&current_time));
+    strftime(buffer, size - 1, "%a, %d %b %Y %T", gmtime(&current_time));
 }

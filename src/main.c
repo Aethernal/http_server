@@ -54,6 +54,7 @@ int main(int argc, char **argv) {
         logger_info("main","printing logs to STDOUT");
     }
 
+
     // start http server
     main_http_serve(interface, port);
 

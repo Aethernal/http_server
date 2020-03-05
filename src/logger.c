@@ -80,8 +80,7 @@ void logger_log(const char* tag, const char* format, const char* color, va_list 
     int new_needed = vsnprintf(NULL, 0 , buffer, args_dup);
 
     // realloc only if different size
-    if (needed != new_needed );
-        buffer = realloc(buffer, needed);
+    buffer = realloc(buffer, new_needed);
 
     if (logFile == NULL ) {
         vprintf( buffer, args);
