@@ -193,7 +193,7 @@ void epoll_client_event(int eventIndex) {
 void epoll_server_event() {
 
     // sockaddr_in does not work (Invalid argument), we need to use sockadddr_un
-    struct sockaddr_in client_addr;
+    struct sockaddr_un client_addr;
     socklen_t client_addr_len;
 
     int client = accept(serverfd, &client_addr, &client_addr_len);
@@ -220,7 +220,7 @@ void epoll_server_event() {
 }
 
 int epoll_setnonblocking(int fd) {
-/*
+
     int flags = 0;
 
     // get current flags value
@@ -229,7 +229,7 @@ int epoll_setnonblocking(int fd) {
 
     // update with old flags + o_nonblock
     return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-*/
+
 }
 
 void epoll_stdin_event() {
