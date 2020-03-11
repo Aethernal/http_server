@@ -29,7 +29,7 @@ We choose to use 'epoll' instead of 'select' to handle the file descriptors of u
 #### Managing concurrent requests
 To be able to manage multiple client at the same time, it is needed to add a system to handle the multiple request, we through of using fork() but it will generate sub-process for each request, which is not resource friendly, so we through of using a worker pool using threads.
 
-###### How it work
+##### How it work
 after parsing the request into a Request structure, we store it in a fifo list awaiting a thread from the pool to handle the request.
 
 #### Managing services
@@ -37,12 +37,12 @@ When the request is handled, the function that will handle the service will be d
 
 currently services are "hard coded" and chained until the 404 fallback is attained.
 
-###### Service Order
+##### Service Order
 * specific service matching uri/method
 * index directory matching an existing path of the web root folder
 * 404 response
 
-###### Evolution :
+##### Evolution :
   We could add a configuration file to allow custom routing to specific functions
 
 ***
