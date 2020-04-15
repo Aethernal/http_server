@@ -10,6 +10,7 @@
 #include <sys/un.h>
 #include <sys/epoll.h>
 #include <sys/mman.h>
+#include <errno.h>
 
 #define STDIN 0
 
@@ -41,6 +42,7 @@ typedef struct ClientEvents
 extern clientEvents_t* clientEvents;
 extern pthread_mutex_t* mutex;
 extern int nextProcessFD[max_event];
+extern int errno ;
 
 /*
  * add non blocking flag to a file descriptor [why does the socket become unix ?] FuMyLi

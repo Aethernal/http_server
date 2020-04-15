@@ -60,18 +60,22 @@ void epoll_serve(const char *interface, const char *port) {
         return;
     }
        while (*running) {
-
         /*
          * wait for events, with a timeout of 300ms
          */
-        event_count = epoll_wait(epollfd, events, max_event, 300);
+           if ((event_count = epoll_wait(epollfd, events, max_event, 300)) == -1)
+           {
+            if (errno == EINTR)
+                continue;
+           }
 
         /*
          * server failure -> exit
          */
-        if (event_count == -1) {
-            logger_error("epoll - serve", "failed to wait for event");
-//            exit(1);
+        if (event_count == -1)
+        {
+            int errnum = errno;
+            logger_error("epoll - serve", "Failed to wait for event: %s", strerror( errnum ));
             continue;
         }
 
@@ -134,6 +138,7 @@ void epoll_serve(const char *interface, const char *port) {
 
 void epoll_slave()
 {
+    logger_info("SLAVE", "Create a slave process");
     while(*running)
     {
         pthread_mutex_lock(mutex);
@@ -181,6 +186,7 @@ void epoll_slave()
         }
         if(!find)
         {
+            logger_info("SLAVE", "Destroy a slave process");
             _exit(0);
         }
 
@@ -262,6 +268,7 @@ int epoll_server_event() {
     socklen_t client_addr_len;
 
     int client = accept(serverfd, &client_addr, &client_addr_len);
+    fcntl(client, F_SETFD, FD_CLOEXEC);
     if (client == -1) {
         logger_error("epoll - server_event", "failed to connect new client");
         return -1;
