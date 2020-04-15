@@ -71,7 +71,8 @@ void epoll_serve(const char *interface, const char *port) {
          */
         if (event_count == -1) {
             logger_error("epoll - serve", "failed to wait for event");
-            exit(1);
+//            exit(1);
+            continue;
         }
 
         /*
@@ -109,7 +110,7 @@ void epoll_serve(const char *interface, const char *port) {
                 if(i < max_client_event)
                 {
                     clientEvents[i].pollEvent = events[n];
-                    clientEvents[i].status = New;
+                    clientEvents[i].status= New;
                 }
                 pthread_mutex_unlock(mutex);
             }
@@ -117,10 +118,9 @@ void epoll_serve(const char *interface, const char *port) {
         if(newUser)
         {
             int pid = fork();
-            if(pid  != 0)
+            if(pid  == 0)
             {
                 epoll_slave();
-                kill(pid, SIGKILL);
             }
         }
     }
@@ -181,7 +181,7 @@ void epoll_slave()
         }
         if(!find)
         {
-            return;
+            _exit(0);
         }
 
         usleep(20000); //20ms
