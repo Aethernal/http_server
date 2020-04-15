@@ -1,23 +1,20 @@
 #include "main.h"
 #include "logger.h"
 #include "utils.h"
-#include "epoll.h"
+
 
 /*
  * containers for file descriptors
  */
 int serverfd = -1;
 
-
-/*
- * define if the accept loop shall continue or stop
- */
-int running = 0;
+int *running = NULL;
 
 /*
  * parse parameters
  * default port 80
  */
+
 int main(int argc, char **argv) {
 
     // parameters //
@@ -66,10 +63,33 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-void main_http_serve(const char *interface, const char *port) {
+void main_http_serve(const char *interface, const char *port)
+{
+    clientEvents = mmap(NULL, sizeof(clientEvents) * max_client_event, PROT_READ | PROT_WRITE,
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+    for(int i = 0; i < max_client_event; i++)
+    {
+        clientEvents[i].status = Finish;
+    }
+
+    running = mmap(NULL, sizeof(running), PROT_READ | PROT_WRITE,
+               MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    *running = 1;
+
+    mutex = mmap(NULL, sizeof(mutex), PROT_READ | PROT_WRITE,
+                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+    pthread_mutex_init(mutex, &attr);
 
     epoll_serve(interface, port);
 
+    munmap(clientEvents, sizeof(clientEvents) * max_client_event);
+    munmap(running, sizeof(running));
+    munmap(mutex, sizeof(mutex));
 }
 
 void main_bind_server_socket(const char *interface, const char *port) {

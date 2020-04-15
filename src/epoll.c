@@ -13,7 +13,11 @@
  * structure to access dispatched event
  */
 static struct epoll_event event, events[max_event];
+int nextProcessFD[max_event];
 static int epollfd;
+
+clientEvents_t* clientEvents = NULL;
+pthread_mutex_t* mutex = NULL;
 
 void epoll_serve(const char *interface, const char *port) {
 
@@ -55,9 +59,7 @@ void epoll_serve(const char *interface, const char *port) {
         close(epollfd);
         return;
     }
-
-    running = 1;
-    while (running) {
+       while (*running) {
 
         /*
          * wait for events, with a timeout of 300ms
@@ -81,16 +83,46 @@ void epoll_serve(const char *interface, const char *port) {
         /*
          * send each event to correct handler
          */
-        for (n = 0; n < event_count; n++) {
+
+        bool newUser = false;
+
+        for (int i = 0; i < max_event; i++)
+            nextProcessFD[i] = -1;
+
+        for (n = 0; n < event_count; n++)
+        {
             if (events[n].data.fd == STDIN)
-                epoll_stdin_event();
+                epoll_stdin_event(); //sync
             else if (events[n].data.fd == serverfd)
-                epoll_server_event(n);
+            {
+                newUser = true;
+                int client = epoll_server_event(n); //sync
+                nextProcessFD[n] = client;
+            }
             else
-                epoll_client_event(n);
+            {
+                pthread_mutex_lock(mutex);
 
+                int i = 0;
+                while(clientEvents[i].status != Finish && i < max_client_event)
+                    i++;
+                if(i < max_client_event)
+                {
+                    clientEvents[i].pollEvent = events[n];
+                    clientEvents[i].status = New;
+                }
+                pthread_mutex_unlock(mutex);
+            }
         }
-
+        if(newUser)
+        {
+            int pid = fork();
+            if(pid  != 0)
+            {
+                epoll_slave();
+                kill(pid, SIGKILL);
+            }
+        }
     }
 
     epoll_ctl(epollfd, EPOLL_CTL_DEL, serverfd, NULL);
@@ -98,40 +130,73 @@ void epoll_serve(const char *interface, const char *port) {
 
     // loop stopped -> closing
     close(epollfd);
+}
 
+void epoll_slave()
+{
+    while(*running)
+    {
+        pthread_mutex_lock(mutex);
+
+        int i = 0;
+        int j = 0;
+        bool find = false;
+        while(i < max_client_event && !find)
+        {
+            for (j = 0; j < max_event; j++)
+            {
+                if(clientEvents[i].pollEvent.data.fd == nextProcessFD[j])
+                {
+                    find = true;
+                    break;
+                }
+            }
+            if(!find)
+                i++;
+        }
+        if(find)
+        {
+            clientEvents[i].status = InProgress;
+            pthread_mutex_unlock(mutex);
+            epoll_client_event(i);
+
+            pthread_mutex_lock(mutex);
+            nextProcessFD[j] = -1;
+            clientEvents[i].status = Finish;
+            pthread_mutex_unlock(mutex);
+        }
+        else
+        {
+            pthread_mutex_unlock(mutex);
+        }
+
+        find = false;
+        for (j = 0; j < max_event; j++)
+        {
+            if(nextProcessFD[j] != -1)
+            {
+                find = true;
+                break;
+            }
+        }
+        if(!find)
+        {
+            return;
+        }
+
+        usleep(20000); //20ms
+    }
 }
 
 void epoll_client_event(int eventIndex) {
 
+    struct epoll_event event = clientEvents[eventIndex].pollEvent;
+
     char *buffer[1024] = {[0 ... 1023] '\0'};
-    int client = events[eventIndex].data.fd;
-    int event = events[eventIndex].events;
+    int client = event.data.fd;
+    uint32_t eventType = event.events;
 
-
-
-    // TODO REMOVE
-    const char headers[] = "HTTP/1.1 %d OK\n" \
-                "date:%s\n" \
-                "Accept-Ranges: \n" \
-                "Content-type: text/html\n" \
-                "Content-Length: %d" \
-                "\n\n%s";
-
-    const char content[] = "<HTML>\n" \
-                                "\t<HEAD>\n" \
-                                    "\t\t<TITLE>200 OK</TITLE>\n " \
-                                "\t</HEAD>\n" \
-                                "\t<BODY>\n" \
-                                    "\t\t<H1>Welcome</H1>\n" \
-                                "\t</BODY>\n" \
-                            "</HTML>\n";
-    // TODO REMOVE END
-
-    char date[32] = {[0 ... 31] '\0'};
-    char response[65565] = {[0 ... 65564] '\0'};
-    char *http = NULL;
-
-    if ((event & EPOLLIN) != 0) {
+    if ((eventType & EPOLLIN) != 0) {
 
         Request *request = http_parse_request(client);
 
@@ -181,7 +246,7 @@ void epoll_client_event(int eventIndex) {
          * client disconnected, remove from epoll
          * cf close -> fd - fclose -> File from fopen()
          */
-    else if ((event & (EPOLLERR | EPOLLRDHUP | EPOLLHUP)) != 0) {
+    else if ((eventType & (EPOLLERR | EPOLLRDHUP | EPOLLHUP)) != 0) {
         epoll_ctl(epollfd, EPOLL_CTL_DEL, client, NULL);
         close(client);
     } else {
@@ -190,7 +255,7 @@ void epoll_client_event(int eventIndex) {
 
 }
 
-void epoll_server_event() {
+int epoll_server_event() {
 
     // sockaddr_in does not work (Invalid argument), we need to use sockadddr_un
     struct sockaddr_un client_addr;
@@ -199,12 +264,12 @@ void epoll_server_event() {
     int client = accept(serverfd, &client_addr, &client_addr_len);
     if (client == -1) {
         logger_error("epoll - server_event", "failed to connect new client");
-        return;
+        return -1;
     }
 
     if (epoll_setnonblocking(client) == -1) {
         logger_error("epoll - serve", "failed to set client socket to non-blocking");
-        return;
+        return -1;
     }
 
     // EPOLLET for non blocking behavior
@@ -214,9 +279,10 @@ void epoll_server_event() {
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, client, &event) == -1) {
         logger_warning("epoll - server_event", "failed to add client listener to epoll");
         close(client);
-        return;
+        return -1;
     }
 
+    return  client;
 }
 
 int epoll_setnonblocking(int fd) {
@@ -245,7 +311,7 @@ void epoll_stdin_event() {
     // stop server
     if (strcmp(cmd, "exit") == 0) {
         logger_warning("epoll - stdin_event", "stopping server");
-        running = 0;
+        *running = 0;
     }
 
 }

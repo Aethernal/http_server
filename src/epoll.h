@@ -8,6 +8,8 @@
 #include <zconf.h>
 #include <ctype.h>
 #include <sys/un.h>
+#include <sys/epoll.h>
+#include <sys/mman.h>
 
 #define STDIN 0
 
@@ -17,6 +19,28 @@
 enum {
     max_event = 10
 };
+
+enum {
+    max_client_event = 100
+};
+
+enum ClientEventStatus
+{
+    New = 0,
+    InProgress,
+    Finish
+};
+
+typedef struct ClientEvents
+{
+    struct epoll_event pollEvent;
+    enum ClientEventStatus status;
+
+} clientEvents_t;
+
+extern clientEvents_t* clientEvents;
+extern pthread_mutex_t* mutex;
+extern int nextProcessFD[max_event];
 
 /*
  * add non blocking flag to a file descriptor [why does the socket become unix ?] FuMyLi
@@ -31,6 +55,11 @@ int epoll_setnonblocking(int fd);
 void epoll_serve(const char *interface, const char* port);
 
 /*
+ * epoll for slave processes
+ */
+void epoll_slave();
+
+/*
  * handle epoll client event (input/disconnect)
  */
 void epoll_client_event(int eventIndex);
@@ -38,7 +67,7 @@ void epoll_client_event(int eventIndex);
 /*
  * handle epoll new requests
  */
-void epoll_server_event();
+int epoll_server_event();
 
 /*
  * handle stdin commands

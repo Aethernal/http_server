@@ -6,7 +6,6 @@
 #define HTTP_SERVER_LOGGER_H
 
 #include <bits/types/FILE.h>
-#include <libio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

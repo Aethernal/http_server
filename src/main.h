@@ -14,6 +14,14 @@
 #include <stdlib.h>
 #include <fcntl.h> // file descriptor close
 #include <sys/epoll.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <stdbool.h>
+
+#include "epoll.h"
 
 /* TODO
 
@@ -28,7 +36,8 @@ enum {
     max_pending_connection = 10000,
 };
 
-extern int serverfd, running;
+extern int serverfd;
+extern int* running;
 
 /*
  * search available ipv4 addr and bind to port
