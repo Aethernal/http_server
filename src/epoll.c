@@ -125,6 +125,12 @@ void epoll_serve(const char *interface, const char *port) {
             if(pid  == 0)
             {
                 epoll_slave();
+            } else {
+                for( int i = 0; i < max_event; i++) {
+                    if (nextProcessFD[i] != -1) {
+                        close(nextProcessFD[i]);
+                    }
+                }
             }
         }
     }
