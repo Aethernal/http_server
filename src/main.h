@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+#include "fileExplorerService.h"
 #include "epoll.h"
 
 /* TODO

@@ -4,6 +4,9 @@
 
 
 #include "services.h"
+#include <errno.h>
+
+extern int errno ;
 
 void route(Request *request)
 {
@@ -15,6 +18,22 @@ void route(Request *request)
         resp->response_code = 200;
 
         const char* hello = "Hello World ! ";
+        resp->content.content = malloc(strlen(hello));
+        resp->content.content_length = (int)strlen(hello);
+        strcpy(resp->content.content, hello);
+
+        http_send_response(request, resp);
+        close(request->clientfd);
+
+        return;
+    }
+
+    if(getServiceIsAvailable(request->uri) != isNothing)
+    {
+        Response *resp = http_create_response(request->clientfd);
+        resp->response_code = 200;
+
+        const char* hello = "Service is OK";
         resp->content.content = malloc(strlen(hello));
         resp->content.content_length = (int)strlen(hello);
         strcpy(resp->content.content, hello);

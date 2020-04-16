@@ -21,7 +21,6 @@ int main(int argc, char **argv)
     int logger = 0;
     char* port = "25565";
     char* logger_file = "out.log";
-    char* default_directory = ".";
     char* interface = "0.0.0.0";
 
     // parameters iterator
@@ -34,7 +33,7 @@ int main(int argc, char **argv)
                 logger_file = optarg;
                 break;
             case 'd':
-                default_directory = optarg;
+                workSpacePath = optarg;
                 break;
             case 'p':
                 port = optarg;

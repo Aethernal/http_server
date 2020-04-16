@@ -7,6 +7,7 @@
 #define HTTP_SERVER_SERVICES_H
 
 #include "http.h"
+#include "fileExplorerService.h"
 #include <zconf.h>
 
 /*
