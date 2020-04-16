@@ -4,7 +4,7 @@ char *workSpacePath = ".";
 
 char *getFullUri(char *uriPart)
 {
-    char *fullPath = malloc(2000);
+    char *fullPath = calloc(strlen(workSpacePath) + strlen(uriPart), 1);
 
     if (workSpacePath[strlen(workSpacePath) - 1] == '/')
         strncpy(fullPath, workSpacePath, strlen(workSpacePath) - 1);
@@ -49,10 +49,19 @@ char *getFileContent(char *uri)
         fseek(fp, 0, SEEK_END);
         size = ftell(fp);
         fseek(fp, 0, SEEK_SET);
-        buffer = calloc(size, 1);
-        if (buffer)
+        if(size > 0)
         {
-            fread(buffer, 1, size, fp);
+            buffer = calloc(size, 1);
+            if (buffer)
+            {
+                fread(buffer, 1, size, fp);
+            }
+        }
+        else
+        {
+            buffer = calloc(2, 1);
+            buffer[0] = ' ';
+            buffer[1] = '\0';
         }
         fclose(fp);
     }
@@ -134,9 +143,18 @@ char *getDirectoryContent(char *local_path, char *uri)
         free(linkString);
     }
 
-    n = snprintf(NULL, 0, list_structure, listbuffer);
-    finalString = calloc(n + 1, 1);
-    sprintf(finalString, list_structure, listbuffer);
+    if(total_char > 0)
+    {
+        n = snprintf(NULL, 0, list_structure, listbuffer);
+        finalString = calloc(n + 1, 1);
+        sprintf(finalString, list_structure, listbuffer);
+    }
+    else
+    {
+        finalString = calloc(2, 1);
+        finalString[0] = ' ';
+        finalString[1] = '\0';
+    }
 
     free(listbuffer);
     closedir(FD);
