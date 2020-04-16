@@ -26,7 +26,7 @@ void route(Request *request) {
     // last fallback
     Response *resp = http_create_response(request->clientfd);
     resp->response_code = 404;
-    
+
     const char* notfound = "404 Page Not Found";
     resp->content.content = malloc(strlen(notfound));
     resp->content.content_length = strlen(notfound);

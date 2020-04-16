@@ -32,17 +32,17 @@ void epoll_serve(const char *interface, const char *port) {
      */
 
     int childs[max_worker] = {[0 ... (max_worker-1)] = 0};
-    int* status;
+    int status = 0;
     int pid;
 
     manager:
     for(int i = 0; i < max_worker; i++) {
 
         // slow down manager
-        usleep(200 * 1000);
+        usleep(1000 * 1000);
 
         if(childs[i] != 0) {
-            if(waitpid(childs[i], status, WNOHANG)) {
+            if(waitpid(childs[i], &status, WNOHANG)) {
                 if (status != 0) {
                     logger_error("fork manager", "Worker[%d] with pid [%d] has stopped, restarting", i, childs[i]);
                     childs[i] = 0;
