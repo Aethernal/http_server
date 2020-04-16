@@ -13,7 +13,6 @@ void route(Request *request)
 
     if(strcmp(request->uri, "/home") == 0 )
     {
-
         Response *resp = http_create_response(request->clientfd);
         resp->response_code = 200;
 
@@ -28,22 +27,52 @@ void route(Request *request)
         return;
     }
 
-    if(getServiceIsAvailable(request->uri) != isNothing)
+    char* uri = getFullUri(request->uri);
+    enum pathType type = getServiceIsAvailable(uri);
+    logger_info("TRUC", "%d", type);
+    logger_info("URI", "%s", uri);
+    logger_info("URI2", "%s", request->uri);
+    logger_info("WS", "%s", workSpacePath);
+
+    if(type != isNothing)
     {
+        char* uriPart = malloc(strlen(request->uri));
+
+        if(request->uri[strlen(request->uri) - 1] == '/')
+            strncat(uriPart, request->uri, strlen(request->uri) - 1);
+        else
+            strcat(uriPart, request->uri);
+
         Response *resp = http_create_response(request->clientfd);
         resp->response_code = 200;
 
-        const char* hello = "Service is OK";
-        resp->content.content = malloc(strlen(hello));
-        resp->content.content_length = (int)strlen(hello);
-        strcpy(resp->content.content, hello);
+        char* buffer = NULL;
+
+        switch (type)
+        {
+        case isFile:
+            buffer = getFileContent(uri);
+            resp->content.content = malloc(strlen(buffer));
+            resp->content.content_length = (int)strlen(buffer);
+            strcpy(resp->content.content, buffer);
+            break;
+        case isDirectory:
+            buffer = getDirectoryContent(uri, uriPart);
+            resp->content.content = malloc(strlen(buffer));
+            resp->content.content_length = (int)strlen(buffer);
+            strcpy(resp->content.content, buffer);
+            break;
+        }
 
         http_send_response(request, resp);
         close(request->clientfd);
-
+        free(uri);
+        free(buffer);
+        free(uriPart);
         return;
     }
 
+    free(uri);
     // last fallback
     Response *resp = http_create_response(request->clientfd);
     resp->response_code = 404;
