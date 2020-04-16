@@ -34,21 +34,22 @@ void epoll_serve(const char *interface, const char *port)
 void epoll_manager()
 {
     int childs[max_worker] = {[0 ... (max_worker-1)] = 0};
-    int status = 0;
+    int status;
     int pid;
 
     while(*running)
     {
         for (int i = 0; i < max_worker; i++)
         {
-            // slow down manager
-            sleep(1);
+            usleep(200000); // 200ms
 
             if (childs[i] != 0)
             {
+                status = 0;
                 if (waitpid(childs[i], &status, WNOHANG))
                 {
-                    if (status != 0)
+                    logger_info("fork manager", "Worker[%d] status[%d]", i, status);
+                    if (status > 0)
                     {
                         logger_error("fork manager", "Worker[%d] with pid [%d] has stopped, restarting", i, childs[i]);
                         childs[i] = 0;
