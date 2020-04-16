@@ -99,14 +99,19 @@ char *getDirectoryContent(char *local_path, char *uri)
 
     while ((in_file = readdir(FD)))
     {
+        /*
         if (!strcmp(in_file->d_name, "."))
             continue;
         if (!strcmp(in_file->d_name, ".."))
             continue;
+        */
 
         if (strlen(uri) == 1 && uri[0] == '/') {
             linkString = calloc(strlen(in_file->d_name) + 1 + 1, 1);
             sprintf(linkString, "%s%s", "/", in_file->d_name);
+        } else if(uri[strlen(uri) - 1]  == '/') {
+            linkString = calloc(strlen(uri) + strlen(in_file->d_name) + 1, 1);
+            sprintf(linkString, "%s%s", uri, in_file->d_name);
         } else {
             linkString = calloc(strlen(in_file->d_name) + strlen(uri) + 1 + 1, 1);
             sprintf(linkString, "%s%s%s", uri, "/", in_file->d_name);
