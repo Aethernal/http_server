@@ -56,6 +56,16 @@ int epoll_server_event();
  */
 void epoll_stdin_event();
 
+/*
+ * handle worker start and restart
+ */
+void epoll_manager();
+
+/*
+ * handle worker epoll
+ */
+void epoll_worker();
+
 int epoll_content_length(const char* content, unsigned int content_length);
 
 #endif //HTTP_SERVER_EPOLL_H

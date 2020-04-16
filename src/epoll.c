@@ -17,8 +17,6 @@ static int epollfd;
 
 void epoll_serve(const char *interface, const char *port) {
 
-    int n, event_count = -1;
-
     main_bind_server_socket(interface, port);
 
     if (epoll_setnonblocking(serverfd) == -1) {
@@ -27,53 +25,53 @@ void epoll_serve(const char *interface, const char *port) {
         return;
     }
 
-    /*
-     * fork workers and process manager
-     */
+    // start manager that will handle workers
+    epoll_manager();
 
+}
+
+void epoll_manager() {
     int childs[max_worker] = {[0 ... (max_worker-1)] = 0};
     int status = 0;
     int pid;
 
-    manager:
-    for(int i = 0; i < max_worker; i++) {
+    while(*running) {
+        for (int i = 0; i < max_worker; i++) {
 
-        // slow down manager
-        usleep(1000 * 1000);
+            // slow down manager
+            usleep(1000 * 1000);
 
-        if(childs[i] != 0) {
-            if(waitpid(childs[i], &status, WNOHANG)) {
-                if (status != 0) {
-                    logger_error("fork manager", "Worker[%d] with pid [%d] has stopped, restarting", i, childs[i]);
-                    childs[i] = 0;
+            if (childs[i] != 0) {
+                if (waitpid(childs[i], &status, WNOHANG)) {
+                    if (status != 0) {
+                        logger_error("fork manager", "Worker[%d] with pid [%d] has stopped, restarting", i, childs[i]);
+                        childs[i] = 0;
+                    }
+                }
+            } else {
+                if ((pid = fork()) != 0) {
+                    logger_info("fork manager", "Worker[%d] process started [%d]", i, pid);
+                    childs[i] = pid;
+                } else {
+                    epoll_worker();
                 }
             }
-        } else {
-            if ((pid = fork()) != 0) {
-                logger_info("fork manager", "Worker[%d] process started [%d]", i, pid);
-                childs[i] = pid;
-            } else {
-                goto worker;
-            }
+
         }
-
     }
 
-    // resume manager loop or exit
-    if(*running) {
-        goto manager;
-    } else {
-        // exit for manager to close server fd etc
-        return;
-    }
+    return;
+}
 
-    // worker exit the manager loop and start their own
-    worker:
+void epoll_worker() {
+
+    int n, event_count = -1;
+
     // create epoll and get fd for configuration
     epollfd = epoll_create1(0);
     if (epollfd == -1) {
         logger_error("epoll - serve", "failed to create epoll");
-        return;
+        exit(0);
     }
 
     // configure serverfd as input
@@ -84,7 +82,7 @@ void epoll_serve(const char *interface, const char *port) {
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, serverfd, &event) == -1) {
         logger_error("epoll - serve", "failed to add server event listener");
         close(epollfd);
-        return;
+        exit(0);
     }
 
     // configure stdin as input
@@ -95,7 +93,7 @@ void epoll_serve(const char *interface, const char *port) {
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, STDIN, &event) == -1) {
         logger_error("epoll - serve", "failed to add stdin event listener");
         close(epollfd);
-        return;
+        exit(0);
     }
 
     while (*running) {
