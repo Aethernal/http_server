@@ -273,7 +273,7 @@ void http_send_response(Request *request, Response *response)
         header_buffer = calloc((unsigned int)n, 1);
 
         sprintf(header_buffer, header_structure, header->name, header->value);
-        strcat(header_buffer, header_buffer);
+        strcat(headers_buffer, header_buffer);
         free(header_buffer);
 
         header++;
