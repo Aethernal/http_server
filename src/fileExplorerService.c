@@ -4,7 +4,7 @@ char *workSpacePath = ".";
 
 char *getFullUri(char *uriPart)
 {
-    char *fullPath = malloc(2000);
+    char *fullPath = calloc(strlen(workSpacePath) + strlen(uriPart), 1);
 
     if (workSpacePath[strlen(workSpacePath) - 1] == '/')
         strncpy(fullPath, workSpacePath, strlen(workSpacePath) - 1);
