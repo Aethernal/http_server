@@ -2,7 +2,8 @@
 
 char *workSpacePath = ".";
 
-char *getFullUri(char *uriPart) {
+char *getFullUri(char *uriPart)
+{
     char *fullPath = malloc(2000);
 
     if (workSpacePath[strlen(workSpacePath) - 1] == '/')
@@ -18,13 +19,15 @@ char *getFullUri(char *uriPart) {
     return fullPath;
 }
 
-enum pathType getServiceIsAvailable(char *uri) {
+enum pathType getServiceIsAvailable(char *uri)
+{
     struct stat sb;
 
     if (strstr(uri, "..") != NULL)
         return isNothing;
 
-    if (stat(uri, &sb) == 0) {
+    if (stat(uri, &sb) == 0)
+    {
         if (S_ISDIR(sb.st_mode))
             return isDirectory;
         if (S_ISREG(sb.st_mode))
@@ -34,18 +37,21 @@ enum pathType getServiceIsAvailable(char *uri) {
     return isNothing;
 }
 
-char *getFileContent(char *uri) {
+char *getFileContent(char *uri)
+{
     char *buffer = NULL;
     long size;
 
     FILE *fp;
     fp = fopen(uri, "r");
-    if (fp != NULL) {
+    if (fp != NULL)
+    {
         fseek(fp, 0, SEEK_END);
         size = ftell(fp);
         fseek(fp, 0, SEEK_SET);
         buffer = calloc(size, 1);
-        if (buffer) {
+        if (buffer)
+        {
             fread(buffer, 1, size, fp);
         }
         fclose(fp);
@@ -54,11 +60,13 @@ char *getFileContent(char *uri) {
     return buffer;
 }
 
-char *getFileName(char *uri) {
+char *getFileName(char *uri)
+{
     return strrchr(uri, '/');
 }
 
-char *getDirectoryContent(char *local_path, char *uri) {
+char *getDirectoryContent(char *local_path, char *uri)
+{
     DIR *FD;
 
     char *listbuffer = NULL;
@@ -71,7 +79,7 @@ char *getDirectoryContent(char *local_path, char *uri) {
     struct dirent *in_file;
 
     if ((FD = opendir(local_path)) == NULL)
-        return listbuffer;
+        return NULL;
 
     const char list_structure[] = "<ul>\r\n" \
                     "%s\r\n" \
@@ -79,7 +87,8 @@ char *getDirectoryContent(char *local_path, char *uri) {
 
     const char item_structure[] = "<li><a href=\"%s\">%s</a></li>\r\n";
 
-    while ((in_file = readdir(FD))) {
+    while ((in_file = readdir(FD)))
+    {
         if (!strcmp(in_file->d_name, "."))
             continue;
         if (!strcmp(in_file->d_name, ".."))

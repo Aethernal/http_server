@@ -329,6 +329,7 @@ void http_send_response(Request *request, Response *response)
 
     free(headers_buffer);
     free(response_content);
+
     http_free_request(request);
     http_free_response(response);
 }
