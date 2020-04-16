@@ -27,8 +27,8 @@ void epoll_serve(const char *interface, const char *port)
     }
 
     // start manager that will handle workers
-    //epoll_manager();
-    epoll_worker();
+    epoll_manager();
+    //epoll_worker();
 
 }
 

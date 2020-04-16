@@ -65,7 +65,7 @@ void http_free_response(Response *response)
 
 Request *http_parse_request(int clientfd)
 {
-    long received_length;
+    unsigned long received_length;
     Request *request = http_create_request(clientfd);
 
     received_length = recv(clientfd, request->buffer, 65535, 0);
@@ -87,14 +87,14 @@ Request *http_parse_request(int clientfd)
         {
             request->buffer[received_length] = '\0'; // set EOF at the end of the buffer
 
-            char *request_position = request->buffer;
+            unsigned char *request_position = request->buffer;
 
             request->method = strtok_r(request->buffer, " \t\r\n", &request_position);
             request->uri = strtok_r(NULL, " \t", &request_position);
             request->version = strtok_r(NULL, " \t\r\n", &request_position);
 
 
-            char *query_start;
+            unsigned char *query_start;
             if ((query_start = strchr(request->uri, '?')))
             {
                 *query_start++ = '\0'; // replace ? by \0 to delimit uri and query and increment by one to get query start
@@ -103,13 +103,13 @@ Request *http_parse_request(int clientfd)
 
                 Query *queries = malloc(sizeof(Query) * query_count); // allocate 10 by 10
                 Query *query = queries;
-                char *queries_position;
+                unsigned char *queries_position;
 
                 while (query < queries + query_count)
                 {
-                    char *parameter;
-                    char *name = NULL, *value = NULL;
-                    char *query_position;
+                    unsigned char *parameter;
+                    unsigned char *name = NULL, *value = NULL;
+                    unsigned char *query_position;
 
                     parameter = strtok_r(query_start, "\r\n& \t", &queries_position);
                     if (!parameter) // break loop on empty name
@@ -148,7 +148,7 @@ Request *http_parse_request(int clientfd)
             /*
              * parse headers
              */
-            char *payload_check = NULL;
+            unsigned char *payload_check = NULL;
             unsigned int header_count = 10;
 
             Header *headers = malloc(sizeof(Header) * header_count); // allocate 10 by 10
@@ -156,7 +156,7 @@ Request *http_parse_request(int clientfd)
 
             while (header < headers + header_count)
             {
-                char *name, *value;
+                unsigned char *name, *value;
 
                 name = strtok_r(NULL, "\r\n: \t", &request_position);
                 if (!name) // break loop on empty name
@@ -187,8 +187,8 @@ Request *http_parse_request(int clientfd)
             }
             request->headers = headers;
 
-            char *content_length_header_value = http_header_get("Content-Length", request);
-            char *content_type_header_value = http_header_get("Content-Type", request);
+            unsigned char *content_length_header_value = http_header_get("Content-Length", request);
+            unsigned char *content_type_header_value = http_header_get("Content-Type", request);
 
             logger_info("http - parse_request", "header count [%d]", request->header_count);
 
@@ -211,13 +211,13 @@ Request *http_parse_request(int clientfd)
 
 void http_send_response(Request *request, Response *response)
 {
-    const char *header_structure = "%s: %s\r\n";
-    const char response_structure[] = "HTTP/1.1 %d %s\r\n" \
+    const unsigned  char *header_structure = "%s: %s\r\n";
+    const unsigned  char response_structure[] = "HTTP/1.1 %d %s\r\n" \
                 "Date: %s\r\n" \
                 "Content-Type: %s\r\n" \
                 "Content-Length: %d";
 
-    char *response_code_info = "Unknown";
+    char unsigned  *response_code_info = "Unknown";
 
     /*
      * TODO use a referential
@@ -248,14 +248,14 @@ void http_send_response(Request *request, Response *response)
                     }
 
     // get current date
-    char date[32] = {[0 ... 31] = '\0'};
+    unsigned  char date[32] = {[0 ... 31] = '\0'};
     current_date(date, 32);
 
     // generate additional header response_structure
     unsigned int total_char = 0;
     int n = 0;
-    char *headers_buffer = NULL;
-    char *header_buffer = NULL;
+    unsigned char *headers_buffer = NULL;
+    unsigned char *header_buffer = NULL;
     Header *header = response->headers;
 
 
@@ -285,7 +285,7 @@ void http_send_response(Request *request, Response *response)
                                   response->content.content_type, response->content.content_length);
 
     // allocate memory and write response content in buffer
-    char *response_content = calloc((unsigned long)response_size + 1, 1);
+    unsigned char *response_content = calloc((unsigned long)response_size + 1, 1);
     sprintf(response_content, response_structure, response->response_code, response_code_info, date,
             response->content.content_type, response->content.content_length);
 
@@ -334,13 +334,13 @@ void http_send_response(Request *request, Response *response)
     http_free_response(response);
 }
 
-char *http_header_get(const char *name, Request *request) {
-    if(request->headers == NULL)
+unsigned char *http_header_get(const char *name, Request *request) {
+    if(name == NULL || request == NULL || request->headers == NULL)
         return NULL;
 
     Header *header = request->headers;
 
-    while (header < request->headers + request->header_count && header->name != NULL) {
+    while (header != NULL && header < request->headers + request->header_count && header->name != NULL) {
         if (strcmp(header->name, name) == 0)
             return header->value;
         header++; // increment iterator on table

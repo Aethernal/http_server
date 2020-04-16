@@ -17,36 +17,36 @@
  * application/octet-stream
  * image/jpeg, image/png, and image/svg+xml.
  */
-static char* DEFAULT_MIME = "text/html";
-static char* MIME_JPG = "image/jpeg";
-static char* MIME_PNG = "image/png";
+static unsigned char* DEFAULT_MIME = "text/html";
+static unsigned char* MIME_JPG = "image/jpeg";
+static unsigned char* MIME_PNG = "image/png";
 
-static const char* HTTP_METHOD_GET = "GET";
-static const char* HTTP_METHOD_HEAD = "HEAD";
-static const char* HTTP_METHOD_POST = "POST";
-static const char* HTTP_METHOD_PUT = "PUT";
-static const char* HTTP_METHOD_DELETE = "DELETE";
+static const unsigned char* HTTP_METHOD_GET = "GET";
+static const unsigned char* HTTP_METHOD_HEAD = "HEAD";
+static const unsigned char* HTTP_METHOD_POST = "POST";
+static const unsigned char* HTTP_METHOD_PUT = "PUT";
+static const unsigned char* HTTP_METHOD_DELETE = "DELETE";
 
 typedef struct content {
-    char* content;
-    char* content_type;
-    int content_length;
+    unsigned char* content;
+    unsigned char* content_type;
+    unsigned int content_length;
 } Content;
 
 typedef struct header {
-    char* name;
-    char* value;
+    unsigned char* name;
+    unsigned char* value;
 } Header;
 
 typedef struct query {
-    char* name;
-    char* value;
+    unsigned char* name;
+    unsigned char* value;
 } Query;
 
 typedef struct response {
-    int response_code;
+    unsigned int response_code;
     Header *headers;
-    int header_count;
+    unsigned int header_count;
     Content content;
 } Response;
 
@@ -61,11 +61,11 @@ typedef struct response {
  *  unsupported content-type throw 415
  */
 typedef struct request {
-    int clientfd;
-    char* buffer;
-    char* version;
-    char* method;
-    char* uri;
+    unsigned int clientfd;
+    unsigned char* buffer;
+    unsigned char* version;
+    unsigned char* method;
+    unsigned char* uri;
     Query *query;
     unsigned int query_count;
     Header *headers;
@@ -97,7 +97,7 @@ void http_send_response(Request *request, Response *response); // clear response
  * get specific header from headers list
  * return NULL if not found
  */
-char* http_header_get(const char* name, Request *request);
+unsigned char* http_header_get(const char* name, Request *request);
 
 /*
  * create empty Request structure for a specific fd

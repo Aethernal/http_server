@@ -5,7 +5,7 @@ char *workSpacePath = ".";
 
 char *getFullUri(char *uriPart)
 {
-    char *fullPath = calloc(strlen(workSpacePath) + strlen(uriPart), 1);
+    unsigned char *fullPath = calloc(strlen(workSpacePath) + strlen(uriPart) + 1, 1);
 
     if (workSpacePath[strlen(workSpacePath) - 1] == '/')
         strncpy(fullPath, workSpacePath, strlen(workSpacePath) - 1);
@@ -24,7 +24,7 @@ enum pathType getServiceIsAvailable(char *uri)
 {
     struct stat sb;
 
-    if (strstr(uri, "..") != NULL)
+    if (strlen(uri) > 1 && strstr(uri, "..") != NULL)
         return isNothing;
 
     if (stat(uri, &sb) == 0)
@@ -40,21 +40,22 @@ enum pathType getServiceIsAvailable(char *uri)
 
 void getFileContent(char *uri, Response* resp)
 {
-    char *buffer = NULL;
-    long size;
+    unsigned char *buffer = NULL;
 
     FILE *fp;
     fp = fopen(uri, "r");
+    long size = 0;
+
     if (fp != NULL)
     {
         fseek(fp, 0, SEEK_END);
         size = ftell(fp);
+        fseek(fp, 0, SEEK_SET);
         logger_info("FILE","size[%d]", size);
-        rewind(fp);
 
         if(size > 0)
         {
-            buffer = calloc(size, 1);
+            buffer = calloc(size + 1, 1);
             if (buffer)
             {
                 fread(buffer, 1, size, fp);
@@ -85,10 +86,10 @@ char *getDirectoryContent(char *local_path, char *uri)
 {
     DIR *FD;
 
-    char *listbuffer = NULL;
-    char *linkString = NULL;
-    char *itemString = NULL;
-    char *finalString = NULL;
+    unsigned char *listbuffer = NULL;
+    unsigned char *linkString = NULL;
+    unsigned char *itemString = NULL;
+    unsigned char *finalString = NULL;
     int n = 0;
     int total_char = 0;
 
@@ -97,11 +98,11 @@ char *getDirectoryContent(char *local_path, char *uri)
     if ((FD = opendir(local_path)) == NULL)
         return NULL;
 
-    const char list_structure[] = "<ul>\r\n" \
+    const unsigned  char list_structure[] = "<ul>\r\n" \
                     "%s\r\n" \
                     "<ul>\r\n";
 
-    const char item_structure[] = "<li><a href=\"%s\">%s</a></li>\r\n";
+    const unsigned char item_structure[] = "<li><a href=\"%s\">%s</a></li>\r\n";
 
     while ((in_file = readdir(FD)))
     {
