@@ -40,10 +40,14 @@ void route(Request *request)
         switch (type)
         {
         case isFile:
-            buffer = getFileContent(uri);
-            resp->content.content = malloc(strlen(buffer) + 1);
-            resp->content.content_length = (int)strlen(buffer);
-            strcpy(resp->content.content, buffer);
+            getFileContent(uri, resp);
+
+            char* ext = strrchr(uri, '.');
+            if( ext != NULL && strcmp(ext, ".png") == 0) {
+                resp->content.content_type = MIME_PNG;
+            }
+
+
             break;
         case isDirectory:
             buffer = getDirectoryContent(uri, request->uri);

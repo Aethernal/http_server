@@ -14,6 +14,7 @@
 #include <limits.h>
 
 #include "logger.h"
+#include "http.h"
 
 enum pathType {
     isNothing = 0,
@@ -25,7 +26,7 @@ extern char* workSpacePath;
 
 char* getFullUri(char* uriPart);
 enum pathType getServiceIsAvailable(char* uri);
-char* getFileContent(char* uri);
+void getFileContent(char* uri, Response* resp);
 char* getDirectoryContent(char* local_path, char* uri);
 char* getFileName(char* uri);
 

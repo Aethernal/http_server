@@ -304,7 +304,7 @@ void http_send_response(Request *request, Response *response)
      */
     if (response->content.content != NULL && response->content.content_length > 0 && strcmp(HTTP_METHOD_HEAD, request->method) != 0)
     {
-        response_size = snprintf(NULL, 0, "%s\r\n\r\n%s", response_content, response->content.content);
+        response_size = snprintf(NULL, 0, "%s\r\n\r\n", response_content) + response->content.content_length;
         response_content = realloc(response_content, (unsigned long)response_size + 1);
         sprintf(response_content, "%s\r\n\r\n%s", response_content, response->content.content);
     }

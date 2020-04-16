@@ -1,4 +1,5 @@
 #include "fileExplorerService.h"
+#include "http.h"
 
 char *workSpacePath = ".";
 
@@ -37,7 +38,7 @@ enum pathType getServiceIsAvailable(char *uri)
     return isNothing;
 }
 
-char *getFileContent(char *uri)
+void getFileContent(char *uri, Response* resp)
 {
     char *buffer = NULL;
     long size;
@@ -48,6 +49,7 @@ char *getFileContent(char *uri)
     {
         fseek(fp, 0, SEEK_END);
         size = ftell(fp);
+        logger_info("FILE","size[%d]", size);
         rewind(fp);
 
         if(size > 0)
@@ -67,7 +69,11 @@ char *getFileContent(char *uri)
         fclose(fp);
     }
 
-    return buffer;
+    resp->content.content = malloc(size + 1);
+    resp->content.content_length = size;
+    strcpy(resp->content.content, buffer);
+
+    free(buffer);
 }
 
 char *getFileName(char *uri)

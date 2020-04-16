@@ -18,6 +18,8 @@
  * image/jpeg, image/png, and image/svg+xml.
  */
 static char* DEFAULT_MIME = "text/html";
+static char* MIME_JPG = "image/jpeg";
+static char* MIME_PNG = "image/png";
 
 static const char* HTTP_METHOD_GET = "GET";
 static const char* HTTP_METHOD_HEAD = "HEAD";
