@@ -73,14 +73,14 @@ Request *http_parse_request(int clientfd)
     if (received_length < 0)
     {
         logger_error("http - parse_request", "failed to receive client request");
-        free(request->buffer);
+        http_free_request(request);
         return NULL;
     }
     else
         if (received_length == 0)
         {
             logger_error("http - parse_request", "client disconnected");
-            free(request->buffer);
+            http_free_request(request);
             return NULL;
         }
         else
@@ -325,6 +325,7 @@ void http_send_response(Request *request, Response *response)
 
     free(headers_buffer);
     free(response_content);
+
     http_free_request(request);
     http_free_response(response);
 }

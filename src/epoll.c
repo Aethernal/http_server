@@ -227,11 +227,11 @@ void epoll_client_event(int eventIndex)
 int epoll_server_event()
 {
     // sockaddr_in does not work (Invalid argument), we need to use sockadddr_un
-    struct sockaddr client_addr;
+    struct sockaddr_in client_addr = { 0 };
     socklen_t client_addr_len;
 
 
-    int client = accept(serverfd, &client_addr, &client_addr_len);
+    int client = accept(serverfd, (struct sockaddr*) &client_addr, &client_addr_len);
 
     if (client == -1)
     {
