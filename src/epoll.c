@@ -102,6 +102,7 @@ void epoll_worker()
     event.events = EPOLLIN;
     event.data.fd = STDIN;
 
+    /*
     // add listener on STDIN to epoll
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, STDIN, &event) == -1)
     {
@@ -109,6 +110,7 @@ void epoll_worker()
         close(epollfd);
         exit(0);
     }
+*/
 
     while (*running)
     {
@@ -227,6 +229,7 @@ int epoll_server_event()
     // sockaddr_in does not work (Invalid argument), we need to use sockadddr_un
     struct sockaddr client_addr;
     socklen_t client_addr_len;
+
 
     int client = accept(serverfd, &client_addr, &client_addr_len);
 

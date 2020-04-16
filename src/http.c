@@ -3,6 +3,7 @@
 //
 
 
+#include <zconf.h>
 #include "http.h"
 #include "logger.h"
 #include "utils.h"
@@ -12,7 +13,7 @@ Request *http_create_request(int clientfd)
     Request *request = malloc(sizeof(Request));
 
     request->clientfd = clientfd;
-    request->buffer = malloc(65535);
+    request->buffer = calloc(65535, 1);
     request->version = NULL;
     request->method = NULL;
     request->uri = NULL;
@@ -317,8 +318,10 @@ void http_send_response(Request *request, Response *response)
     }
     else
     {
-        logger_info("http - send_response", "response length : %d content:\n%s", response_size, response_content);
+        logger_info("http - send_response", "response length : %d", response_size);
     }
+
+    close(request->clientfd);
 
     free(headers_buffer);
     free(response_content);

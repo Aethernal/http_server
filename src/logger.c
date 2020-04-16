@@ -68,7 +68,6 @@ void logger_content(const char* tag, const char* format, ...)
 
 void logger_log(const char* tag, const char* format, const char* color, va_list args)
 {
-
     char date [32] = {[0 ... 31] = '\0'};
     time_t current_time;
 
@@ -90,7 +89,11 @@ void logger_log(const char* tag, const char* format, const char* color, va_list 
     int new_needed = vsnprintf(NULL, 0 , buffer, args_dup);
 
     // realloc only if different size
-    buffer = realloc(buffer, new_needed);
+    if (buffer == NULL) {
+        buffer = calloc(new_needed, 1);
+    } else {
+        buffer = realloc(buffer, new_needed);
+    }
 
     if (logFile == NULL )
     {

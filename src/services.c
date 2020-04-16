@@ -22,7 +22,6 @@ void route(Request *request)
         strcpy(resp->content.content, hello);
 
         http_send_response(request, resp);
-        close(request->clientfd);
 
         return;
     }
@@ -58,10 +57,11 @@ void route(Request *request)
             break;
         }
 
-        http_send_response(request, resp);
-        close(request->clientfd);
         free(uri);
         free(buffer);
+
+        http_send_response(request, resp);
+
         return;
     }
 
@@ -76,7 +76,6 @@ void route(Request *request)
     strcpy(resp->content.content, notfound);
 
     http_send_response(request, resp);
-    close(request->clientfd);
 
     return;
 }
