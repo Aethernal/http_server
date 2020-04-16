@@ -27,8 +27,6 @@ void route(Request *request)
     }
 
     char* uri = getFullUri(request->uri);
-    logger_info("TEST1", "%s", request->uri);
-    logger_info("TEST2", "%s", uri);
     enum pathType type = getServiceIsAvailable(uri);
 
     if(type != isNothing)
