@@ -11,19 +11,19 @@
 #include <stdarg.h>
 #include <time.h>
 
-#define logger_color_red "\e[0;31m"
-#define logger_color_bold_red "\e[1;31m"
-#define logger_color_green "\e[0;32m"
-#define logger_color_bold_green "\e[1;32m"
-#define logger_color_yellow "\e[0;33m"
-#define logger_color_bold_yellow "\e[01;33m"
-#define logger_color_blue "\e[0;34m"
-#define logger_color_bold_blue "\e[1;34m"
-#define logger_color_magenta "\e[0;35m"
-#define logger_color_bold_magenta "\e[1;35m"
-#define logger_color_cyan "\e[0;36m"
-#define logger_color_bold_cyan "\e[1;36m"
-#define logger_color_reset "\e[0m"
+#define logger_color_red "\033[0;31m"
+#define logger_color_bold_red "\033[1;31m"
+#define logger_color_green "\033[0;32m"
+#define logger_color_bold_green "\033[1;32m"
+#define logger_color_yellow "\033[0;33m"
+#define logger_color_bold_yellow "\033[01;33m"
+#define logger_color_blue "\033[0;34m"
+#define logger_color_bold_blue "\033[1;34m"
+#define logger_color_magenta "\033[0;35m"
+#define logger_color_bold_magenta "\033[1;35m"
+#define logger_color_cyan "\033[0;36m"
+#define logger_color_bold_cyan "\033[1;36m"
+#define logger_color_reset "\033[0m"
 
 /*
  * try to create / open the file on write append mode

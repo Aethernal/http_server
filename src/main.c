@@ -15,8 +15,8 @@ int *running = NULL;
  * default port 80
  */
 
-int main(int argc, char **argv) {
-
+int main(int argc, char **argv)
+{
     // parameters //
     int logger = 0;
     char* port = "25565";
@@ -27,7 +27,8 @@ int main(int argc, char **argv) {
     // parameters iterator
     int opt;
 
-    while( (opt = getopt(argc, argv, "o:d:p:l")) != -1 ) {
+    while( (opt = getopt(argc, argv, "o:d:p:l")) != -1 )
+    {
         switch (opt) {
             case 'o':
                 logger_file = optarg;
@@ -45,9 +46,12 @@ int main(int argc, char **argv) {
     }
 
     // init logger
-    if(logger) {
+    if(logger)
+    {
         logger_init(logger_file);
-    } else {
+    }
+    else
+    {
         logger_info("main","printing logs to STDOUT");
     }
 
@@ -65,7 +69,6 @@ int main(int argc, char **argv) {
 
 void main_http_serve(const char *interface, const char *port)
 {
-
     running = mmap(NULL, sizeof(running), PROT_READ | PROT_WRITE,
                MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     *running = 1;
@@ -76,9 +79,9 @@ void main_http_serve(const char *interface, const char *port)
     munmap(running, sizeof(running));
 }
 
-void main_bind_server_socket(const char *interface, const char *port) {
-
-    struct addrinfo socket_options = {}, *addrs, *addr;
+void main_bind_server_socket(const char *interface, const char *port)
+{
+    struct addrinfo socket_options = (const struct addrinfo){ 0 }, *addrs, *addr;
 
     logger_info("main - bind_server_socket", "starting server");
 
@@ -94,7 +97,8 @@ void main_bind_server_socket(const char *interface, const char *port) {
     /*
      * fill addrs with all available ipv4 addr
      */
-    if (getaddrinfo(NULL, port, &socket_options, &addrs) != 0) {
+    if (getaddrinfo(NULL, port, &socket_options, &addrs) != 0)
+    {
         logger_error("main - bind_server_socket", "failed to get addrs");
         exit(1);
     }
@@ -105,7 +109,8 @@ void main_bind_server_socket(const char *interface, const char *port) {
      * for iteration on sockets linked list elements
      * bind sockets to port
      */
-    for (addr = addrs; addr != NULL; addr = addrs->ai_next) {
+    for (addr = addrs; addr != NULL; addr = addrs->ai_next)
+    {
         int option = 1; // boolean value to enable SO_REUSEADDR
 
         serverfd = socket(addr->ai_family, addr->ai_socktype, 0); // default protocol
@@ -118,10 +123,13 @@ void main_bind_server_socket(const char *interface, const char *port) {
     }
 
     // check if we could bind a socket
-    if (addr == NULL) {
+    if (addr == NULL)
+    {
         logger_error("main - bind_server_socket", "failed to bind port");
         exit(1);
-    } else {
+    }
+    else
+    {
         logger_success("main - bind_server_socket", "binded to [%s][%s]", inet_ntoa(*((struct in_addr*)addr)), port);
     }
 
@@ -129,11 +137,11 @@ void main_bind_server_socket(const char *interface, const char *port) {
     freeaddrinfo(addrs);
 
     // start listening for request
-    if (listen(serverfd, max_pending_connection) != 0) {
+    if (listen(serverfd, max_pending_connection) != 0)
+    {
         logger_error("main - bind_server_socket", "failed to listen on serverfd");
         exit(1);
     }
 
     logger_success("main - bind_server_socket", "server started");
-
 }

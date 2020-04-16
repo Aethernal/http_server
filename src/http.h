@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include <sys/socket.h>
 
 /*
@@ -16,7 +17,7 @@
  * application/octet-stream
  * image/jpeg, image/png, and image/svg+xml.
  */
-static const char* DEFAULT_MIME = "text/html";
+static char* DEFAULT_MIME = "text/html";
 
 static const char* HTTP_METHOD_GET = "GET";
 static const char* HTTP_METHOD_HEAD = "HEAD";
@@ -27,7 +28,7 @@ static const char* HTTP_METHOD_DELETE = "DELETE";
 typedef struct content {
     char* content;
     char* content_type;
-    long content_length;
+    int content_length;
 } Content;
 
 typedef struct header {
@@ -64,9 +65,9 @@ typedef struct request {
     char* method;
     char* uri;
     Query *query;
-    int query_count;
+    unsigned int query_count;
     Header *headers;
-    int header_count;
+    unsigned int header_count;
     Content payload;
 } Request;
 

@@ -6,9 +6,11 @@
 
 static FILE *logFile;
 
-void logger_init(const char* file) {
+void logger_init(const char* file)
+{
     logFile = fopen(file, "a+"); // open file & append
-    if( logFile == NULL ) {
+    if( logFile == NULL )
+    {
         logger_error("log - init}", "failed to open log file");
         return;
     }
@@ -16,50 +18,58 @@ void logger_init(const char* file) {
     logger_info("logger - init", "output in [%s]", file);
 }
 
-void logger_exit() {
-    if (logFile != NULL ) {
+void logger_exit()
+{
+    if (logFile != NULL )
+    {
         fclose(logFile);
     }
 }
 
-void logger_error(const char* tag, const char* format, ...) {
+void logger_error(const char* tag, const char* format, ...)
+{
     va_list args;
     va_start(args, format);
     logger_log(tag, format, logger_color_red, args);
     va_end(args);
 }
 
-void logger_success(const char* tag, const char* format, ...) {
+void logger_success(const char* tag, const char* format, ...)
+{
     va_list args;
     va_start(args, format);
     logger_log(tag, format, logger_color_green, args);
     va_end(args);
 }
 
-void logger_warning(const char* tag, const char* format, ...) {
+void logger_warning(const char* tag, const char* format, ...)
+{
     va_list args;
     va_start(args, format);
     logger_log(tag, format, logger_color_yellow, args);
     va_end(args);
 }
 
-void logger_info(const char* tag, const char* format, ...) {
+void logger_info(const char* tag, const char* format, ...)
+{
     va_list args;
     va_start(args, format);
     logger_log(tag, format, logger_color_cyan, args);
     va_end(args);
 }
 
-void logger_content(const char* tag, const char* format, ...) {
+void logger_content(const char* tag, const char* format, ...)
+{
     va_list args;
     va_start(args, format);
     logger_log(tag, format, logger_color_magenta, args);
     va_end(args);
 }
 
-void logger_log(const char* tag, const char* format, const char* color, va_list args) {
+void logger_log(const char* tag, const char* format, const char* color, va_list args)
+{
 
-    char date [32] = {[0 ... 31] '\0'};
+    char date [32] = {[0 ... 31] = '\0'};
     time_t current_time;
 
     time(&current_time);
@@ -80,11 +90,14 @@ void logger_log(const char* tag, const char* format, const char* color, va_list 
     int new_needed = vsnprintf(NULL, 0 , buffer, args_dup);
 
     // realloc only if different size
-    buffer = realloc(buffer, new_needed);
+    buffer = realloc(buffer, (unsigned int)new_needed);
 
-    if (logFile == NULL ) {
+    if (logFile == NULL )
+    {
         vprintf( buffer, args);
-    } else {
+    }
+    else
+    {
         vfprintf(logFile, buffer, args);
         fflush(logFile);
     }

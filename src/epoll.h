@@ -64,7 +64,7 @@ void epoll_manager();
 /*
  * handle worker epoll
  */
-void epoll_worker();
+void epoll_worker() __attribute__((noreturn));
 
 int epoll_content_length(const char* content, unsigned int content_length);
 
