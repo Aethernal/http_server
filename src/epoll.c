@@ -36,8 +36,10 @@ void epoll_serve(const char *interface, const char *port) {
     int pid;
 
     manager:
-    sleep(1);
     for(int i = 0; i < max_worker; i++) {
+
+        // slow down manager
+        usleep(200 * 1000);
 
         if(childs[i] != 0) {
             if(waitpid(childs[i], status, WNOHANG)) {
