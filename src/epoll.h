@@ -10,11 +10,8 @@
 #include <sys/un.h>
 #include <sys/epoll.h>
 #include <sys/mman.h>
-#include <errno.h>
 
 #define STDIN 0
-
-extern pthread_mutex_t* mutex;
 
 /*
  * number of event in the epoll

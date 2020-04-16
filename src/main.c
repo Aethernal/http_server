@@ -70,18 +70,10 @@ void main_http_serve(const char *interface, const char *port)
                MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     *running = 1;
 
-    mutex = mmap(NULL, sizeof(mutex), PROT_READ | PROT_WRITE,
-                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-    pthread_mutex_init(mutex, &attr);
 
     epoll_serve(interface, port);
 
     munmap(running, sizeof(running));
-    munmap(mutex, sizeof(mutex));
 }
 
 void main_bind_server_socket(const char *interface, const char *port) {

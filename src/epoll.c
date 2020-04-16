@@ -15,8 +15,6 @@
 static struct epoll_event event, events[max_event];
 static int epollfd;
 
-pthread_mutex_t* mutex = NULL;
-
 void epoll_serve(const char *interface, const char *port) {
 
     int n, event_count = -1;
@@ -103,9 +101,7 @@ void epoll_serve(const char *interface, const char *port) {
         /*
          * wait for events, with a timeout of 300ms
          */
-        //pthread_mutex_lock(mutex);
         event_count = epoll_wait(epollfd, events, max_event, 300);
-        //pthread_mutex_unlock(mutex);
 
         /*
          * server failure -> exit
@@ -221,7 +217,7 @@ int epoll_server_event() {
     socklen_t client_addr_len;
 
     int client = accept(serverfd, &client_addr, &client_addr_len);
-    fcntl(client, F_SETFD, FD_CLOEXEC);
+
     if (client == -1) {
         logger_error("epoll - server_event", "failed to connect new client");
         return -1;
