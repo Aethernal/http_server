@@ -68,19 +68,19 @@ Request *http_parse_request(int clientfd)
     long received_length;
     Request *request = http_create_request(clientfd);
 
-    received_length = recv(clientfd, request->buffer, INT_MAX, 0);
+    received_length = recv(clientfd, request->buffer, 65535, 0);
 
     if (received_length < 0)
     {
         logger_error("http - parse_request", "failed to receive client request");
-        free(request->buffer);
+        http_free_request(request);
         return NULL;
     }
     else
         if (received_length == 0)
         {
             logger_error("http - parse_request", "client disconnected");
-            free(request->buffer);
+            http_free_request(request);
             return NULL;
         }
         else
@@ -265,8 +265,12 @@ void http_send_response(Request *request, Response *response)
         if(n > 0)
             total_char += (unsigned int)n;
 
-        headers_buffer = realloc(headers_buffer, total_char);
-        header_buffer = malloc((unsigned int)n);
+        if (headers_buffer == NULL)
+            headers_buffer = calloc(total_char, 1);
+        else
+            headers_buffer = realloc(headers_buffer, total_char);
+
+        header_buffer = calloc((unsigned int)n, 1);
 
         sprintf(header_buffer, header_structure, header->name, header->value);
         strcat(header_buffer, header_buffer);
@@ -281,14 +285,14 @@ void http_send_response(Request *request, Response *response)
                                   response->content.content_type, response->content.content_length);
 
     // allocate memory and write response content in buffer
-    char *response_content = malloc((unsigned long)response_size);
+    char *response_content = calloc((unsigned long)response_size + 1, 1);
     sprintf(response_content, response_structure, response->response_code, response_code_info, date,
             response->content.content_type, response->content.content_length);
 
     if (headers_buffer != NULL && response->header_count > 0)
     {
         response_size = snprintf(NULL, 0, "%s\r\n%s", response_content, headers_buffer);
-        response_content = realloc(response_content, (unsigned long)response_size);
+        response_content = realloc(response_content + 1, (unsigned long)response_size);
         sprintf(response_content, "%s\r\n%s", response_content, headers_buffer);
     }
 
@@ -301,13 +305,13 @@ void http_send_response(Request *request, Response *response)
     if (response->content.content != NULL && response->content.content_length > 0 && strcmp(HTTP_METHOD_HEAD, request->method) != 0)
     {
         response_size = snprintf(NULL, 0, "%s\r\n\r\n%s", response_content, response->content.content);
-        response_content = realloc(response_content, (unsigned long)response_size);
+        response_content = realloc(response_content, (unsigned long)response_size + 1);
         sprintf(response_content, "%s\r\n\r\n%s", response_content, response->content.content);
     }
     else
     {
         response_size = snprintf(NULL, 0, "%s\r\n\r\n", response_content);
-        response_content = realloc(response_content, (unsigned long)response_size);
+        response_content = realloc(response_content + 1, (unsigned long)response_size);
         sprintf(response_content, "%s\r\n\r\n", response_content);
     }
 
@@ -330,6 +334,9 @@ void http_send_response(Request *request, Response *response)
 }
 
 char *http_header_get(const char *name, Request *request) {
+    if(request->headers == NULL)
+        return NULL;
+
     Header *header = request->headers;
 
     while (header < request->headers + request->header_count && header->name != NULL) {

@@ -10,6 +10,7 @@
 #include <sys/un.h>
 #include <sys/epoll.h>
 #include <sys/mman.h>
+#include "http.h"
 
 #define STDIN 0
 

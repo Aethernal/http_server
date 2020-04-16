@@ -17,7 +17,7 @@ void route(Request *request)
         resp->response_code = 200;
 
         const char* hello = "Hello World ! ";
-        resp->content.content = malloc(strlen(hello));
+        resp->content.content = malloc(strlen(hello)) + 1;
         resp->content.content_length = (int)strlen(hello);
         strcpy(resp->content.content, hello);
 
@@ -28,10 +28,6 @@ void route(Request *request)
 
     char* uri = getFullUri(request->uri);
     enum pathType type = getServiceIsAvailable(uri);
-    logger_info("TRUC", "%d", type);
-    logger_info("URI", "%s", uri);
-    logger_info("URI2", "%s", request->uri);
-    logger_info("WS", "%s", workSpacePath);
 
     if(type != isNothing)
     {
@@ -45,21 +41,21 @@ void route(Request *request)
         {
         case isFile:
             buffer = getFileContent(uri);
-            resp->content.content = malloc(strlen(buffer));
+            resp->content.content = malloc(strlen(buffer) + 1);
             resp->content.content_length = (int)strlen(buffer);
             strcpy(resp->content.content, buffer);
             break;
         case isDirectory:
             buffer = getDirectoryContent(uri, request->uri);
-            resp->content.content = malloc(strlen(buffer));
+            resp->content.content = malloc(strlen(buffer) + 1);
             resp->content.content_length = (int)strlen(buffer);
             strcpy(resp->content.content, buffer);
             break;
         }
 
+        if(buffer != NULL)
+            free(buffer);
         free(uri);
-        free(buffer);
-
         http_send_response(request, resp);
 
         return;
@@ -71,7 +67,7 @@ void route(Request *request)
     resp->response_code = 404;
 
     const char* notfound = "404 Page Not Found";
-    resp->content.content = malloc(strlen(notfound));
+    resp->content.content = malloc(strlen(notfound) + 1);
     resp->content.content_length = (int)strlen(notfound);
     strcpy(resp->content.content, notfound);
 

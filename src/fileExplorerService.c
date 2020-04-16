@@ -86,35 +86,42 @@ char *getDirectoryContent(char *local_path, char *uri) {
             continue;
 
         if (strlen(uri) == 1 && uri[0] == '/') {
-            linkString = calloc(strlen(in_file->d_name) + 1, 1);
+            linkString = calloc(strlen(in_file->d_name) + 1 + 1, 1);
             sprintf(linkString, "%s%s", "/", in_file->d_name);
         } else {
-            linkString = calloc(strlen(in_file->d_name) + strlen(uri) + 1, 1);
+            linkString = calloc(strlen(in_file->d_name) + strlen(uri) + 1 + 1, 1);
             sprintf(linkString, "%s%s%s", uri, "/", in_file->d_name);
         }
 
         n = snprintf(NULL, 0, item_structure, linkString, in_file->d_name);
-        if (n > 0) {
-            total_char += (unsigned int) n;
+        total_char += (unsigned int) n;
 
-            itemString = calloc(n, 1);
-            sprintf(itemString, item_structure, linkString, in_file->d_name);
+        itemString = calloc(n + 1, 1);
+        sprintf(itemString, item_structure, linkString, in_file->d_name);
 
-            if(listbuffer == NULL) {
-                listbuffer = calloc(total_char, 1);
-                strcpy(listbuffer, itemString);
-            } else {
-                listbuffer = realloc(listbuffer, total_char);
-                sprintf(listbuffer, "%s%s", listbuffer, itemString);
+        if (listbuffer == NULL) {
+            listbuffer = calloc(total_char + 1, 1);
+            strcpy(listbuffer, itemString);
+        } else {
+            char *tmp = realloc(listbuffer, total_char + 1);
+            if (tmp == NULL) {
+                free(listbuffer);
+                free(itemString);
+                free(linkString);
+                return NULL;
             }
+            listbuffer = tmp;
 
-            free(itemString);
-            free(linkString);
+            sprintf(listbuffer, "%s%s", listbuffer, itemString);
         }
+
+        free(itemString);
+
+        free(linkString);
     }
 
     n = snprintf(NULL, 0, list_structure, listbuffer);
-    finalString = calloc(n,1);
+    finalString = calloc(n + 1, 1);
     sprintf(finalString, list_structure, listbuffer);
 
     free(listbuffer);

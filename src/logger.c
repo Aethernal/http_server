@@ -68,17 +68,18 @@ void logger_content(const char* tag, const char* format, ...)
 
 void logger_log(const char* tag, const char* format, const char* color, va_list args)
 {
+
     char date [32] = {[0 ... 31] = '\0'};
     time_t current_time;
 
     time(&current_time);
     strftime(date, sizeof(date)-1, "[%Y-%m-%d %H:%M:%S] -", gmtime(&current_time));
 
-    char* log_format = "%s %s{%s}%s %s\n";
+    char* log_format = "%s %s{%s}%s %s\n\0";
     size_t needed = snprintf(NULL, 0, log_format, date, color, tag, logger_color_reset, format);
 
     // size for tag format
-    char* buffer = malloc(needed);
+    char* buffer = malloc(needed + 1);
     sprintf(buffer, log_format, date, color, tag, logger_color_reset, format);
 
     // make a copy of args or else vsnprintf consume them
@@ -90,9 +91,9 @@ void logger_log(const char* tag, const char* format, const char* color, va_list 
 
     // realloc only if different size
     if (buffer == NULL) {
-        buffer = calloc(new_needed, 1);
+        buffer = calloc(new_needed + 1, 1);
     } else {
-        buffer = realloc(buffer, new_needed);
+        buffer = realloc(buffer, new_needed + 1);
     }
 
     if (logFile == NULL )
@@ -104,5 +105,5 @@ void logger_log(const char* tag, const char* format, const char* color, va_list 
         vfprintf(logFile, buffer, args);
         fflush(logFile);
     }
-
+    free(buffer);
 }

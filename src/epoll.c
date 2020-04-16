@@ -102,7 +102,7 @@ void epoll_worker()
     event.events = EPOLLIN;
     event.data.fd = STDIN;
 
-    /*
+
     // add listener on STDIN to epoll
     if (epoll_ctl(epollfd, EPOLL_CTL_ADD, STDIN, &event) == -1)
     {
@@ -110,7 +110,7 @@ void epoll_worker()
         close(epollfd);
         exit(0);
     }
-*/
+
 
     while (*running)
     {
@@ -174,7 +174,6 @@ void epoll_client_event(int eventIndex)
                 Response *resp = http_create_response(client);
                 resp->response_code = 505;
                 http_send_response(request, resp);
-                close(client);
 
                 return;
             }
@@ -192,7 +191,6 @@ void epoll_client_event(int eventIndex)
                 Response *resp = http_create_response(client);
                 resp->response_code = 405;
                 http_send_response(request, resp);
-                close(client);
 
                 return;
             }
