@@ -13,34 +13,18 @@
 
 #define STDIN 0
 
+extern pthread_mutex_t* mutex;
+
 /*
- * numbero of event in the epoll
+ * number of event in the epoll
  */
 enum {
     max_event = 10
 };
 
 enum {
-    max_client_event = 100
+    max_worker = 10
 };
-
-enum ClientEventStatus
-{
-    New = 0,
-    InProgress,
-    Finish
-};
-
-typedef struct ClientEvents
-{
-    struct epoll_event pollEvent;
-    enum ClientEventStatus status;
-
-} clientEvents_t;
-
-extern clientEvents_t* clientEvents;
-extern pthread_mutex_t* mutex;
-extern int nextProcessFD[max_event];
 
 /*
  * add non blocking flag to a file descriptor [why does the socket become unix ?] FuMyLi
@@ -77,3 +61,4 @@ void epoll_stdin_event();
 int epoll_content_length(const char* content, unsigned int content_length);
 
 #endif //HTTP_SERVER_EPOLL_H
+

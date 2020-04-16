@@ -13,10 +13,8 @@
  * structure to access dispatched event
  */
 static struct epoll_event event, events[max_event];
-int nextProcessFD[max_event];
 static int epollfd;
 
-clientEvents_t* clientEvents = NULL;
 pthread_mutex_t* mutex = NULL;
 
 void epoll_serve(const char *interface, const char *port) {
@@ -31,6 +29,46 @@ void epoll_serve(const char *interface, const char *port) {
         return;
     }
 
+    /*
+     * fork workers and process manager
+     */
+
+    int childs[max_worker] = {[0 ... (max_worker-1)] = 0};
+    int* status;
+    int pid;
+
+    manager:
+    sleep(1);
+    for(int i = 0; i < max_worker; i++) {
+
+        if(childs[i] != 0) {
+            if(waitpid(childs[i], status, WNOHANG)) {
+                if (status != 0) {
+                    logger_error("fork manager", "Worker[%d] with pid [%d] has stopped, restarting", i, childs[i]);
+                    childs[i] = 0;
+                }
+            }
+        } else {
+            if ((pid = fork()) != 0) {
+                logger_info("fork manager", "Worker[%d] process started [%d]", i, pid);
+                childs[i] = pid;
+            } else {
+                goto worker;
+            }
+        }
+
+    }
+
+    // resume manager loop or exit
+    if(*running) {
+        goto manager;
+    } else {
+        // exit for manager to close server fd etc
+        return;
+    }
+
+    // worker exit the manager loop and start their own
+    worker:
     // create epoll and get fd for configuration
     epollfd = epoll_create1(0);
     if (epollfd == -1) {
@@ -59,20 +97,22 @@ void epoll_serve(const char *interface, const char *port) {
         close(epollfd);
         return;
     }
-       while (*running) {
+
+    while (*running) {
 
         /*
          * wait for events, with a timeout of 300ms
          */
+        //pthread_mutex_lock(mutex);
         event_count = epoll_wait(epollfd, events, max_event, 300);
+        //pthread_mutex_unlock(mutex);
 
         /*
          * server failure -> exit
          */
         if (event_count == -1) {
             logger_error("epoll - serve", "failed to wait for event");
-//            exit(1);
-            continue;
+            exit(0);
         }
 
         /*
@@ -85,48 +125,13 @@ void epoll_serve(const char *interface, const char *port) {
          * send each event to correct handler
          */
 
-        bool newUser = false;
-
-        for (int i = 0; i < max_event; i++)
-            nextProcessFD[i] = -1;
-
-        for (n = 0; n < event_count; n++)
-        {
+        for (n = 0; n < event_count; n++) {
             if (events[n].data.fd == STDIN)
                 epoll_stdin_event(); //sync
-            else if (events[n].data.fd == serverfd)
-            {
-                newUser = true;
-                int client = epoll_server_event(n); //sync
-                nextProcessFD[n] = client;
-            }
-            else
-            {
-                pthread_mutex_lock(mutex);
-
-                int i = 0;
-                while(clientEvents[i].status != Finish && i < max_client_event)
-                    i++;
-                if(i < max_client_event)
-                {
-                    clientEvents[i].pollEvent = events[n];
-                    clientEvents[i].status= New;
-                }
-                pthread_mutex_unlock(mutex);
-            }
-        }
-        if(newUser)
-        {
-            int pid = fork();
-            if(pid  == 0)
-            {
-                epoll_slave();
+            else if (events[n].data.fd == serverfd) {
+                epoll_server_event(n); //sync
             } else {
-                for( int i = 0; i < max_event; i++) {
-                    if (nextProcessFD[i] != -1) {
-                        close(nextProcessFD[i]);
-                    }
-                }
+                epoll_client_event(n);
             }
         }
     }
@@ -136,67 +141,14 @@ void epoll_serve(const char *interface, const char *port) {
 
     // loop stopped -> closing
     close(epollfd);
-}
 
-void epoll_slave()
-{
-    while(*running)
-    {
-        pthread_mutex_lock(mutex);
-
-        int i = 0;
-        int j = 0;
-        bool find = false;
-        while(i < max_client_event && !find)
-        {
-            for (j = 0; j < max_event; j++)
-            {
-                if(clientEvents[i].pollEvent.data.fd == nextProcessFD[j])
-                {
-                    find = true;
-                    break;
-                }
-            }
-            if(!find)
-                i++;
-        }
-        if(find)
-        {
-            clientEvents[i].status = InProgress;
-            pthread_mutex_unlock(mutex);
-            epoll_client_event(i);
-
-            pthread_mutex_lock(mutex);
-            nextProcessFD[j] = -1;
-            clientEvents[i].status = Finish;
-            pthread_mutex_unlock(mutex);
-        }
-        else
-        {
-            pthread_mutex_unlock(mutex);
-        }
-
-        find = false;
-        for (j = 0; j < max_event; j++)
-        {
-            if(nextProcessFD[j] != -1)
-            {
-                find = true;
-                break;
-            }
-        }
-        if(!find)
-        {
-            _exit(0);
-        }
-
-        usleep(20000); //20ms
-    }
+    // exit for workers
+    exit(0);
 }
 
 void epoll_client_event(int eventIndex) {
 
-    struct epoll_event event = clientEvents[eventIndex].pollEvent;
+    struct epoll_event event = events[eventIndex];
 
     char *buffer[1024] = {[0 ... 1023] '\0'};
     int client = event.data.fd;
@@ -219,7 +171,8 @@ void epoll_client_event(int eventIndex) {
                 return;
             }
 
-            const char *allowed_methods[5] = {HTTP_METHOD_GET, HTTP_METHOD_HEAD, HTTP_METHOD_POST, HTTP_METHOD_PUT, HTTP_METHOD_DELETE};
+            const char *allowed_methods[5] = {HTTP_METHOD_GET, HTTP_METHOD_HEAD, HTTP_METHOD_POST, HTTP_METHOD_PUT,
+                                              HTTP_METHOD_DELETE};
             int allowed_method = 0;
 
             for (int i = 0; i < 5; i++)
@@ -288,7 +241,7 @@ int epoll_server_event() {
         return -1;
     }
 
-    return  client;
+    return client;
 }
 
 int epoll_setnonblocking(int fd) {

@@ -65,13 +65,6 @@ int main(int argc, char **argv) {
 
 void main_http_serve(const char *interface, const char *port)
 {
-    clientEvents = mmap(NULL, sizeof(clientEvents) * max_client_event, PROT_READ | PROT_WRITE,
-                    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
-
-    for(int i = 0; i < max_client_event; i++)
-    {
-        clientEvents[i].status = Finish;
-    }
 
     running = mmap(NULL, sizeof(running), PROT_READ | PROT_WRITE,
                MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -87,7 +80,6 @@ void main_http_serve(const char *interface, const char *port)
 
     epoll_serve(interface, port);
 
-    munmap(clientEvents, sizeof(clientEvents) * max_client_event);
     munmap(running, sizeof(running));
     munmap(mutex, sizeof(mutex));
 }
