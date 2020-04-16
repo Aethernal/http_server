@@ -48,7 +48,8 @@ char *getFileContent(char *uri)
     {
         fseek(fp, 0, SEEK_END);
         size = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
+        rewind(fp);
+
         if(size > 0)
         {
             buffer = calloc(size, 1);
