@@ -221,6 +221,7 @@ int epoll_server_event() {
     socklen_t client_addr_len;
 
     int client = accept(serverfd, &client_addr, &client_addr_len);
+    fcntl(client, F_SETFD, FD_CLOEXEC);
     if (client == -1) {
         logger_error("epoll - server_event", "failed to connect new client");
         return -1;
