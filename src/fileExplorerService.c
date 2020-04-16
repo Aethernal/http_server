@@ -7,9 +7,9 @@ char* getFullUri(char* uriPart)
     char* fullPath = malloc(2000);
 
     if(workSpacePath[strlen(workSpacePath) - 1] == '/')
-        strncat(fullPath, workSpacePath, strlen(workSpacePath) - 1);
+        strncpy(fullPath, workSpacePath, strlen(workSpacePath) - 1);
     else
-        strcat(fullPath, workSpacePath);
+        strcpy(fullPath, workSpacePath);
 
     if(uriPart[strlen(uriPart) - 1] == '/')
         strncat(fullPath, uriPart, strlen(uriPart) - 1);
@@ -65,15 +65,20 @@ char* getFileName(char* uri)
     return strrchr(uri, '/');
 }
 
-char* getDirectoryContent(char* uri, char* uriPart)
+char* getDirectoryContent(char* local_path, char* uri)
 {
     DIR* FD;
+
     char* listbuffer = NULL;
+    char* linkString = NULL;
+    char* itemString = NULL;
+    char* finalString = NULL;
+    int n = 0;
+    int total_char = 0;
+
     struct dirent* in_file;
-    FILE    *entry_file;
 
-
-    if ((FD = opendir (uri)) == NULL)
+    if ((FD = opendir (local_path)) == NULL)
        return listbuffer;
 
     const char list_structure[] = "<ul>\r\n" \
@@ -82,8 +87,6 @@ char* getDirectoryContent(char* uri, char* uriPart)
 
     const char item_structure[] = "<li><a href=\"%s\">%s</a></li>\r\n";
 
-    int total_char = 0;
-
     while ((in_file = readdir(FD)))
     {
        if (!strcmp (in_file->d_name, "."))
@@ -91,25 +94,28 @@ char* getDirectoryContent(char* uri, char* uriPart)
        if (!strcmp (in_file->d_name, ".."))
            continue;
 
-       char* linkString = malloc(strlen(in_file->d_name) + strlen(uriPart) + 1);
-       strcat(linkString, uriPart);
-       strcat(linkString, "/");
-       strcat(linkString, in_file->d_name);
+       linkString = malloc(strlen(in_file->d_name) + strlen(uri) + 1);
+       if(strlen(uri) == 1 && uri[0] == '/')
+            sprintf(linkString, "%s%s", "/", in_file->d_name);
+       else
+           sprintf(linkString, "%s%s%s", uri, "/", in_file->d_name);
 
-       unsigned int n = snprintf(NULL, 0, item_structure, linkString, in_file->d_name);
-       total_char += (unsigned int)n;
-       char* itemString = malloc(n);
+       n = snprintf(NULL, 0, item_structure, linkString, in_file->d_name);
+       if (n > 0)
+        total_char += (unsigned int)n;
 
+       itemString = malloc(n);
        sprintf(itemString, item_structure, linkString, in_file->d_name);
 
        listbuffer = realloc(listbuffer, total_char);
-       strcat(listbuffer, itemString);
+       sprintf(listbuffer,"%s%s",listbuffer,itemString);
 
        free(itemString);
+       free(linkString);
     }
 
-    unsigned int n = snprintf(NULL, 0, list_structure, listbuffer);
-    char* finalString = malloc(n);
+    n = snprintf(NULL, 0, list_structure, listbuffer);
+    finalString = malloc(n);
     sprintf(finalString, list_structure, listbuffer);
 
     free(listbuffer);

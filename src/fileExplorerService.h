@@ -26,7 +26,7 @@ extern char* workSpacePath;
 char* getFullUri(char* uriPart);
 enum pathType getServiceIsAvailable(char* uri);
 char* getFileContent(char* uri);
-char* getDirectoryContent(char* uri, char* uriPart);
+char* getDirectoryContent(char* local_path, char* uri);
 char* getFileName(char* uri);
 
 #endif //HTTP_SERVER_SERVICES_H

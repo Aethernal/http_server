@@ -36,12 +36,6 @@ void route(Request *request)
 
     if(type != isNothing)
     {
-        char* uriPart = malloc(strlen(request->uri));
-
-        if(request->uri[strlen(request->uri) - 1] == '/')
-            strncat(uriPart, request->uri, strlen(request->uri) - 1);
-        else
-            strcat(uriPart, request->uri);
 
         Response *resp = http_create_response(request->clientfd);
         resp->response_code = 200;
@@ -57,7 +51,7 @@ void route(Request *request)
             strcpy(resp->content.content, buffer);
             break;
         case isDirectory:
-            buffer = getDirectoryContent(uri, uriPart);
+            buffer = getDirectoryContent(uri, request->uri);
             resp->content.content = malloc(strlen(buffer));
             resp->content.content_length = (int)strlen(buffer);
             strcpy(resp->content.content, buffer);
@@ -68,7 +62,6 @@ void route(Request *request)
         close(request->clientfd);
         free(uri);
         free(buffer);
-        free(uriPart);
         return;
     }
 
